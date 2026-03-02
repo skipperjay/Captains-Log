@@ -45,3 +45,4 @@ Open `http://localhost:5173`
 - Ideas saved via Quick Capture go to your Skipper `ideas` table
 - Notes saved via Quick Capture go to Waypoint's `logs` table
 - If Waypoint endpoints aren't set up yet, those panels show graceful empty states
+"# Captains-Log" 
