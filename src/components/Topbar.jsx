@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 const PAGE_TITLES = {
   brief:       ['Daily Brief',     'CAPTAIN\'S LOG / TODAY'],
   pipeline:    ['Content Pipeline','CAPTAIN\'S LOG / CONTENT'],
+  projects:    ['Projects',        'CAPTAIN\'S LOG / PROJECTS'],
   ideas:       ['Ideas',           'CAPTAIN\'S LOG / IDEAS'],
   notes:       ['Notes',           'CAPTAIN\'S LOG / NOTES'],
   workouts:    ['Workouts',        'CAPTAIN\'S LOG / FITNESS'],

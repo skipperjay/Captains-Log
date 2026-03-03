@@ -11,6 +11,7 @@ export const PIPELINE_LABELS = { backlog:'Backlog', in_progress:'In Progress', r
 export const NAV = [
   { id:'brief',       icon:'⚓', label:'Daily Brief'    },
   { id:'pipeline',    icon:'⬡', label:'Pipeline'       },
+  { id:'projects',    icon:'🚀', label:'Projects'       },
   { id:'ideas',       icon:'💡', label:'Ideas'          },
   { id:'notes',       icon:'📝', label:'Notes'          },
   { id:'workouts',    icon:'💪', label:'Workouts'       },

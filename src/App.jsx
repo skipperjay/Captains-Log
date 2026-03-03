@@ -8,6 +8,7 @@ import QuickCapture from './components/QuickCapture'
 import Pipeline from './components/Pipeline'
 import Workouts from './components/Workouts'
 import DailyReview from './components/DailyReview'
+import Projects from './components/Projects'
 import Notes from './components/Notes'
 import Ideas from './components/Ideas'
 import Todos from './components/Todos'
@@ -258,6 +259,9 @@ export default function App() {
 
           {/* ══ PIPELINE ══ */}
           {page==='pipeline' && <Pipeline pipeline={pipeline} onToast={showToast}/>}
+
+          {/* ══ PROJECTS ══ */}
+          {page==='projects' && <Projects onToast={showToast}/>}
 
           {/* ══ IDEAS ══ */}
           {page==='ideas' && <Ideas onToast={showToast}/>}

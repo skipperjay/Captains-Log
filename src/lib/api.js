@@ -22,7 +22,16 @@ export const api = {
   addContent:     (b)     => req('/content',            { method:'POST', body:JSON.stringify(b) }),
   moveContent:    (id, stage) => req(`/content/${id}`,  { method:'PATCH', body:JSON.stringify({ stage }) }),
 
-  // ── Notes ──
+  // ── Projects ──
+  projects:           ()        => req('/projects'),
+  createProject:      (b)       => req('/projects',                    { method:'POST',  body:JSON.stringify(b) }),
+  updateProject:      (id, b)   => req(`/projects/${id}`,              { method:'PATCH', body:JSON.stringify(b) }),
+  deleteProject:      (id)      => req(`/projects/${id}`,              { method:'DELETE' }),
+  addMilestone:       (id, b)   => req(`/projects/${id}/milestones`,   { method:'POST',  body:JSON.stringify(b) }),
+  updateMilestone:    (id, b)   => req(`/projects/milestones/${id}`,   { method:'PATCH', body:JSON.stringify(b) }),
+  deleteMilestone:    (id)      => req(`/projects/milestones/${id}`,   { method:'DELETE' }),
+  addProjectUpdate:   (id, b)   => req(`/projects/${id}/updates`,      { method:'POST',  body:JSON.stringify(b) }),
+  deleteProjectUpdate:(id)      => req(`/projects/updates/${id}`,      { method:'DELETE' }),
   notes:          ()      => req('/waypoint/notes'),
   addNote:        (b)     => req('/waypoint/notes',    { method:'POST', body:JSON.stringify(b) }),
   deleteNote:     (id)    => req(`/waypoint/notes/${id}`,  { method:'DELETE' }),
