@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../lib/api'
+import ProjectCopilot from './ProjectCopilot'
 
 const STATUS_CONFIG = {
   active: { label: 'Active',  color: 'var(--success)',   bg: 'rgba(46,200,128,.1)',  border: 'rgba(46,200,128,.2)'  },
@@ -68,6 +69,8 @@ function ProjectCard({ project, onToast }) {
   const [newUpdate, setNewUpdate] = useState('')
   const [newMins, setNewMins] = useState('')
   const [showUpdateInput, setShowUpdateInput] = useState(false)
+  const [copilotTrigger, setCopilotTrigger] = useState(0)
+  const [lastUpdateText, setLastUpdateText] = useState('')
   const qc = useQueryClient()
 
   const milestones = (project.milestones || []).filter(m => m && m.id).sort((a,b) => a.id - b.id)
@@ -102,7 +105,13 @@ function ProjectCard({ project, onToast }) {
 
   const addUpdate = useMutation({
     mutationFn: ({ body, mins_logged }) => api.addProjectUpdate(project.id, { body, mins_logged }),
-    onSuccess: () => { qc.invalidateQueries(['projects']); setNewUpdate(''); setNewMins(''); setShowUpdateInput(false); onToast('Update logged', '📝') },
+    onSuccess: () => {
+      qc.invalidateQueries(['projects'])
+      setLastUpdateText(newUpdate)
+      setCopilotTrigger(t => t + 1)
+      setNewUpdate(''); setNewMins(''); setShowUpdateInput(false)
+      onToast('Update logged', '📝')
+    },
     onError: () => onToast('Failed to log update', '✖'),
   })
 
@@ -227,6 +236,11 @@ function ProjectCard({ project, onToast }) {
             ) : updates.slice(0,5).map(u => (
               <UpdateRow key={u.id} update={u} fmtDate={fmtDate} fmtMins={fmtMins} onDelete={()=>deleteUpdate.mutate(u.id)}/>
             ))}
+            <ProjectCopilot
+              project={project}
+              trigger={copilotTrigger}
+              updateText={lastUpdateText}
+            />
           </div>
 
           {/* Footer actions */}

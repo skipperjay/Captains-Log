@@ -15,6 +15,9 @@ import Todos from './components/Todos'
 import BriefHeader from './components/BriefHeader'
 import QuickLogWorkout from './components/QuickLogWorkout'
 import CalendarSidebar from './components/CalendarSidebar'
+import IntelligenceBrief from './components/IntelligenceBrief'
+import MomentumScore from './components/MomentumScore'
+import ProofOfWork from './components/ProofOfWork'
 import { GrowthChart, PillarChart, ExecChart } from './components/Charts'
 import { api } from './lib/api'
 import { PILLARS, fmtDate } from './lib/constants'
@@ -189,6 +192,8 @@ export default function App() {
   const { data: growth }       = useQuery({ queryKey:['growth'],        queryFn: ()=>api.growth(84) })
   const { data: habits }       = useQuery({ queryKey:['habitsToday'],   queryFn: api.habitsToday,    refetchInterval:30_000 })
   const { data: todos }        = useQuery({ queryKey:['todos'],         queryFn: api.todos,          refetchInterval:30_000 })
+  const { data: workouts }     = useQuery({ queryKey:['workouts'],      queryFn: api.workouts,       refetchInterval:60_000 })
+  const { data: projects }     = useQuery({ queryKey:['projects'],      queryFn: api.projects,       refetchInterval:60_000 })
 
   const pipeline   = dash?.pipeline || []
   const ytSubs     = dash?.youtube?.subscribers || 0
@@ -229,12 +234,17 @@ export default function App() {
             <div style={{ display:'flex', gap:18, alignItems:'flex-start' }}>
               {/* Main column */}
               <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:16 }}>
-                <BriefHeader
-                  habitsDone={habitsDone}
-                  habitsTotal={habitsTotal}
-                  streak={streak}
-                  daysSince={daysSince}
+                <IntelligenceBrief
+                  dashboardData={dash}
+                  habits={habitList}
+                  projects={projects||[]}
+                  reviews={dailyReviews||[]}
+                />
+                <MomentumScore
+                  habitPct={habitPct}
                   contentExecPct={contentExecPct}
+                  projects={projects||[]}
+                  workouts={workouts||[]}
                 />
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }} className="gauge-grid">
                   <Gauge pct={habitPct} label="Today's Habits" sub={habitsTotal>0?`${habitsDone} of ${habitsTotal} habits logged`:'Log habits via WhatsApp'} size="large"/>
@@ -244,6 +254,12 @@ export default function App() {
                 <Todos todos={todos||[]} onToast={showToast}/>
                 <QuickLogWorkout onToast={showToast}/>
                 <QuickCapture onToast={showToast}/>
+                <ProofOfWork
+                  habits={habitList}
+                  todos={todos||[]}
+                  projects={projects||[]}
+                  workouts={workouts||[]}
+                />
               </div>
               {/* Calendar sidebar */}
               <div className="calendar-col">
