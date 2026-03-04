@@ -100,10 +100,6 @@ export default function Pipeline({ pipeline=[], onToast }) {
   const [editingId, setEditingId] = useState(null)
   const qc = useQueryClient()
 
-  if (editingId) {
-    return <ContentEditor contentId={editingId} onBack={() => setEditingId(null)} onToast={onToast}/>
-  }
-
   const deleteMut = useMutation({
     mutationFn: (id) => api.deleteContent(id),
     onSuccess: () => { qc.invalidateQueries(['dashboard']); qc.invalidateQueries(['content']); onToast('Deleted', '✕') },
@@ -114,6 +110,10 @@ export default function Pipeline({ pipeline=[], onToast }) {
     onSuccess: () => { qc.invalidateQueries(['dashboard']); qc.invalidateQueries(['content']); onToast('Moved', '⬡') },
     onError: () => onToast('Failed to move', '✖'),
   })
+
+  if (editingId) {
+    return <ContentEditor contentId={editingId} onBack={() => setEditingId(null)} onToast={onToast}/>
+  }
 
   // Map pipeline data to simplified 3-stage view
   const map = { backlog:{ total:0, items:[] }, in_progress:{ total:0, items:[] }, done:{ total:0, items:[] } }
