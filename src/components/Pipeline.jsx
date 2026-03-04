@@ -109,18 +109,19 @@ export default function Pipeline({ pipeline=[], onToast }) {
     onSuccess: () => { qc.invalidateQueries(['dashboard']); qc.invalidateQueries(['content']); onToast('Deleted', '✕') },
     onError: () => onToast('Failed to delete', '✖'),
   })
+  const moveMut = useMutation({
     mutationFn: ({ id, stage }) => api.moveContent(id, stage),
     onSuccess: () => { qc.invalidateQueries(['dashboard']); qc.invalidateQueries(['content']); onToast('Moved', '⬡') },
     onError: () => onToast('Failed to move', '✖'),
   })
 
   // Map pipeline data to simplified 3-stage view
-  const map = { idea:{ total:0, items:[] }, in_progress:{ total:0, items:[] }, done:{ total:0, items:[] } }
+  const map = { backlog:{ total:0, items:[] }, in_progress:{ total:0, items:[] }, done:{ total:0, items:[] } }
 
   pipeline.forEach(p => {
     // Map old stages to new 3-stage system
-    const stageMap = { backlog:'idea', in_progress:'in_progress', review:'in_progress', approved:'in_progress', done:'done' }
-    const mapped = stageMap[p.stage] || 'idea'
+    const stageMap = { backlog:'backlog', in_progress:'in_progress', review:'in_progress', approved:'in_progress', done:'done' }
+    const mapped = stageMap[p.stage] || 'backlog'
     if (map[mapped]) {
       map[mapped].total += parseInt(p.total)||0
       const items = (p.content_titles||[]).map((title,i) => ({
