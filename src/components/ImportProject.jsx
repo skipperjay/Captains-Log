@@ -33,12 +33,11 @@ Rules:
 - Keep milestone titles concise
 - Return only the JSON object, nothing else`
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const BASE = import.meta.env.VITE_API_URL || '/api'
+  const response = await fetch(`${BASE}/ai/complete`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
       messages: [{ role: 'user', content: prompt }],
     }),
   })
