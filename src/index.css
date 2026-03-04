@@ -18,7 +18,7 @@
   --rs: 6px;
   --t: 180ms cubic-bezier(.4,0,.2,1);
   --sidebar-w: 220px;
-  --bottom-nav-h: 60px;
+  --bottom-nav-h: 68px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -121,7 +121,17 @@ input, textarea, select, button { font-family: var(--font-body); }
 
   /* Page body tighter padding */
   .page-body {
-    padding: 14px 12px 80px !important;
+    padding: 14px 12px 90px !important;
+  }
+
+  /* Bigger base font on mobile */
+  body {
+    font-size: 14px !important;
+  }
+
+  /* Card text bigger */
+  .page-body p, .page-body div {
+    font-size: inherit;
   }
 
   /* Cards full width */
@@ -171,9 +181,10 @@ input, textarea, select, button { font-family: var(--font-body); }
   }
 }
 
-/* Pipeline board single column on mobile */
+/* Pipeline board - horizontal scroll on mobile */
 @media (max-width: 768px) {
   .pipeline-board {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(3, 280px) !important;
+    min-width: unset !important;
   }
 }
