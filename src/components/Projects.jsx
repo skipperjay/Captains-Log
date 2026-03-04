@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../lib/api'
 import ProjectCopilot from './ProjectCopilot'
+import ImportProject from './ImportProject'
 
 const STATUS_CONFIG = {
   active: { label: 'Active',  color: 'var(--success)',   bg: 'rgba(46,200,128,.1)',  border: 'rgba(46,200,128,.2)'  },
@@ -306,6 +307,7 @@ function UpdateRow({ update, fmtDate, fmtMins, onDelete }) {
 
 export default function Projects({ onToast }) {
   const [showAdd, setShowAdd] = useState(false)
+  const [showImport, setShowImport] = useState(false)
   const { data: projects=[], isLoading } = useQuery({
     queryKey: ['projects'],
     queryFn: api.projects,
@@ -325,11 +327,18 @@ export default function Projects({ onToast }) {
               <div style={{ fontFamily:'var(--font-disp)', fontSize:14, fontWeight:700, color:'var(--cream)' }}>Projects</div>
               <div style={{ fontFamily:'var(--font-mono)', fontSize:9, color:'var(--muted)', marginTop:2 }}>{active.length} active · {paused.length} paused · {done.length} done</div>
             </div>
-            <button onClick={()=>setShowAdd(true)} style={{
-              fontFamily:'var(--font-mono)', fontSize:9, padding:'6px 14px',
-              background:'rgba(201,160,48,.1)', color:'var(--gold-400)',
-              border:'1px solid rgba(201,160,48,.2)', borderRadius:'var(--rs)', cursor:'pointer',
-            }}>+ New Project</button>
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={()=>setShowImport(true)} style={{
+                fontFamily:'var(--font-mono)', fontSize:9, padding:'6px 12px',
+                background:'rgba(255,255,255,.04)', color:'var(--muted)',
+                border:'1px solid rgba(255,255,255,.08)', borderRadius:'var(--rs)', cursor:'pointer',
+              }}>⬆ Import</button>
+              <button onClick={()=>setShowAdd(true)} style={{
+                fontFamily:'var(--font-mono)', fontSize:9, padding:'6px 14px',
+                background:'rgba(201,160,48,.1)', color:'var(--gold-400)',
+                border:'1px solid rgba(201,160,48,.2)', borderRadius:'var(--rs)', cursor:'pointer',
+              }}>+ New Project</button>
+            </div>
           </div>
 
           <div style={{ padding:'16px 18px' }}>
@@ -368,6 +377,7 @@ export default function Projects({ onToast }) {
       </div>
 
       {showAdd && <AddProjectModal onClose={()=>setShowAdd(false)} onToast={onToast}/>}
+      {showImport && <ImportProject onClose={()=>setShowImport(false)} onToast={onToast}/>}
     </>
   )
 }
