@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../lib/api'
 import { PILLARS } from '../lib/constants'
+import ProductionPhases from './ProductionPhases'
 
 const FORMATS = {
   long_form_video:  'Long Form Video',
@@ -241,6 +242,13 @@ export default function ContentEditor({ contentId, onBack, onToast }) {
           style={{ ...inp, width:'100%', resize:'vertical', lineHeight:1.6 }}
         />
       </div>
+
+      {/* ── Production Phases ── */}
+      <ProductionPhases
+        contentId={contentId}
+        phases={item?.phases || []}
+        onToast={onToast}
+      />
     </div>
   )
 }

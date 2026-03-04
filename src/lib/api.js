@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_URL || '/api'
+const BASE = '/api'
 
 async function req(path, opts = {}) {
   const res = await fetch(BASE + path, {
@@ -38,6 +38,7 @@ export const api = {
   deleteIdea:     (id)    => req(`/ideas/${id}`,            { method:'DELETE' }),
   getContent:         (id)    => req(`/content/${id}`),
   updateContentFull:  (id, b) => req(`/content/${id}`, { method:'PATCH', body:JSON.stringify(b) }),
+  updateContentPhase: (id, phase, b) => req(`/content/${id}/phases/${phase}`, { method:'PATCH', body:JSON.stringify(b) }),
   deleteContent:      (id)    => req(`/content/${id}`,          { method:'DELETE' }),
   dailyReviews:    ()     => req('/daily-reviews'),
   saveDailyReview: (b)    => req('/daily-reviews',      { method:'POST', body:JSON.stringify(b) }),

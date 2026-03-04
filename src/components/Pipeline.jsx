@@ -4,6 +4,7 @@ import { PILLARS, guessPillar } from '../lib/constants'
 import { api } from '../lib/api'
 import AddContent from './AddContent'
 import ContentEditor from './ContentEditor'
+import PhaseBar from './PhaseBar'
 
 const STAGES = ['idea', 'in_progress', 'done']
 const STAGE_LABELS = { idea:'Ideas', in_progress:'In Progress', done:'Done' }
@@ -83,6 +84,7 @@ function PipeCard({ item, stage, onMove, onDelete, onEdit }) {
           <span style={{ fontFamily:'var(--font-mono)', fontSize:8, color:'var(--gold-400)', opacity:.7, marginLeft:'auto' }}>Open →</span>
         )}
       </div>
+      <PhaseBar phases={item.phases || []} />
       {menuOpen && (
         <>
           <div style={{ position:'fixed', inset:0, zIndex:49 }} onClick={e=>{e.stopPropagation();setMenuOpen(false)}}/>
@@ -98,12 +100,15 @@ export default function Pipeline({ pipeline=[], onToast }) {
   const [editingId, setEditingId] = useState(null)
   const qc = useQueryClient()
 
+  if (editingId) {
+    return <ContentEditor contentId={editingId} onBack={() => setEditingId(null)} onToast={onToast}/>
+  }
+
   const deleteMut = useMutation({
     mutationFn: (id) => api.deleteContent(id),
     onSuccess: () => { qc.invalidateQueries(['dashboard']); qc.invalidateQueries(['content']); onToast('Deleted', '✕') },
     onError: () => onToast('Failed to delete', '✖'),
   })
-  const moveMut = useMutation({
     mutationFn: ({ id, stage }) => api.moveContent(id, stage),
     onSuccess: () => { qc.invalidateQueries(['dashboard']); qc.invalidateQueries(['content']); onToast('Moved', '⬡') },
     onError: () => onToast('Failed to move', '✖'),
@@ -129,10 +134,6 @@ export default function Pipeline({ pipeline=[], onToast }) {
   })
 
   const total = Object.values(map).reduce((a,s)=>a+s.total,0)
-
-  if (editingId) {
-    return <ContentEditor contentId={editingId} onBack={() => setEditingId(null)} onToast={onToast}/>
-  }
 
   return (
     <>
