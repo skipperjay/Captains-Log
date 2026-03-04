@@ -1,7 +1,13 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { NAV } from '../lib/constants'
 
+const PRIMARY_NAV = ['brief', 'pipeline', 'projects', 'workouts', 'more']
+
 export default function Sidebar({ page, setPage }) {
+  const [showMore, setShowMore] = useState(false)
+
+  const secondaryNav = NAV.filter(n => !['brief','pipeline','projects','workouts'].includes(n.id))
+
   return (
     <>
       {/* ── Desktop Sidebar ── */}
@@ -27,7 +33,7 @@ export default function Sidebar({ page, setPage }) {
         </div>
 
         {/* Nav */}
-        <nav style={{ padding: '16px 12px', flex: 1 }}>
+        <nav style={{ padding: '16px 12px', flex: 1, overflowY: 'auto' }}>
           {NAV.map(({ id, icon, label }) => (
             <button key={id} onClick={() => setPage(id)} style={{
               display: 'flex', alignItems: 'center', gap: 10,
@@ -70,28 +76,66 @@ export default function Sidebar({ page, setPage }) {
         borderTop: '1px solid rgba(201,160,48,.12)',
         backdropFilter: 'blur(20px)',
         zIndex: 100,
-        padding: '0 8px',
+        padding: '0 4px',
         alignItems: 'center',
         justifyContent: 'space-around',
       }} className="mobile-nav">
-        {NAV.map(({ id, icon, label }) => (
-          <button key={id} onClick={() => setPage(id)} style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-            padding: '8px 10px', border: 'none', background: 'none',
+        {/* Primary nav items */}
+        {NAV.filter(n => ['brief','pipeline','projects','workouts'].includes(n.id)).map(({ id, icon, label }) => (
+          <button key={id} onClick={() => { setPage(id); setShowMore(false) }} style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+            padding: '6px 8px', border: 'none', background: 'none',
             color: page === id ? 'var(--gold-400)' : 'var(--muted)',
             cursor: 'pointer', borderRadius: 'var(--rs)',
             flex: 1, transition: 'color var(--t)',
           }}>
-            <span style={{ fontSize: 18 }}>{icon}</span>
-            <span style={{ fontFamily:'var(--font-mono)', fontSize: 8, letterSpacing: .5 }}>{label.split(' ')[0]}</span>
+            <span style={{ fontSize: 20 }}>{icon}</span>
+            <span style={{ fontFamily:'var(--font-mono)', fontSize: 7, letterSpacing: .5 }}>{label.split(' ')[0]}</span>
           </button>
         ))}
+        {/* More button */}
+        <button onClick={() => setShowMore(s => !s)} style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+          padding: '6px 8px', border: 'none',
+          background: showMore ? 'rgba(201,160,48,.1)' : 'none',
+          color: showMore ? 'var(--gold-400)' : 'var(--muted)',
+          cursor: 'pointer', borderRadius: 'var(--rs)',
+          flex: 1, transition: 'color var(--t)',
+        }}>
+          <span style={{ fontSize: 20 }}>⋯</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize: 7, letterSpacing: .5 }}>More</span>
+        </button>
       </nav>
+
+      {/* ── Mobile More Drawer ── */}
+      {showMore && (
+        <div style={{
+          display: 'none', position: 'fixed', bottom: 'var(--bottom-nav-h)', left: 0, right: 0,
+          background: 'rgba(9,21,37,.98)', borderTop: '1px solid rgba(201,160,48,.12)',
+          backdropFilter: 'blur(20px)', zIndex: 99, padding: '12px 16px',
+          flexDirection: 'column', gap: 4,
+        }} className="mobile-drawer">
+          {secondaryNav.map(({ id, icon, label }) => (
+            <button key={id} onClick={() => { setPage(id); setShowMore(false) }} style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: '12px 14px', border: 'none', borderRadius: 'var(--rs)',
+              background: page === id ? 'rgba(201,160,48,.08)' : 'transparent',
+              color: page === id ? 'var(--gold-400)' : 'var(--cream)',
+              cursor: 'pointer', fontSize: 13, fontWeight: 500,
+              textAlign: 'left', width: '100%',
+            }}>
+              <span style={{ fontSize: 18, width: 24, textAlign: 'center' }}>{icon}</span>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <style>{`
         @media (max-width: 768px) {
           .desktop-sidebar { display: none !important; }
           .mobile-nav { display: flex !important; }
+          .mobile-drawer { display: flex !important; }
         }
       `}</style>
     </>

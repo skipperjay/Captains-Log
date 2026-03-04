@@ -86,7 +86,7 @@ input, textarea, select, button { font-family: var(--font-body); }
 
 .page-body {
   padding: 28px 32px;
-  max-width: 900px;
+  max-width: 1100px;
 }
 
 /* Mobile */
@@ -98,5 +98,82 @@ input, textarea, select, button { font-family: var(--font-body); }
   .page-body {
     padding: 20px 16px;
     max-width: 100%;
+  }
+}
+
+/* ── MOBILE IMPROVEMENTS ── */
+@media (max-width: 768px) {
+
+  /* Calendar sidebar stacks below on mobile */
+  .calendar-col {
+    display: none !important;
+  }
+
+  /* Gauge grid single column */
+  .gauge-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Topbar compact */
+  .topbar-sub {
+    display: none !important;
+  }
+
+  /* Page body tighter padding */
+  .page-body {
+    padding: 14px 12px 80px !important;
+  }
+
+  /* Cards full width */
+  .pipeline-board {
+    flex-direction: column !important;
+  }
+
+  /* Modals full screen on mobile */
+  .modal-inner {
+    max-width: 100% !important;
+    max-height: 92vh !important;
+    border-radius: 16px 16px 0 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Intelligence brief smaller text */
+  .brief-text {
+    font-size: 12px !important;
+  }
+
+  /* Table overflow scroll */
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Momentum score compact */
+  .momentum-score {
+    padding: 12px 14px !important;
+  }
+
+  /* Touch targets minimum size */
+  button {
+    min-height: 36px;
+  }
+}
+
+/* Topbar mobile */
+@media (max-width: 768px) {
+  .topbar {
+    padding: 10px 14px !important;
+  }
+}
+
+/* Pipeline board single column on mobile */
+@media (max-width: 768px) {
+  .pipeline-board {
+    grid-template-columns: 1fr !important;
   }
 }

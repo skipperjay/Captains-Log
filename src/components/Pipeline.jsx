@@ -92,7 +92,6 @@ export default function Pipeline({ pipeline=[], onToast }) {
     onSuccess: () => { qc.invalidateQueries(['dashboard']); qc.invalidateQueries(['content']); onToast('Deleted', '✕') },
     onError: () => onToast('Failed to delete', '✖'),
   })
-  const moveMut = useMutation({
     mutationFn: ({ id, stage }) => api.moveContent(id, stage),
     onSuccess: () => { qc.invalidateQueries(['dashboard']); qc.invalidateQueries(['content']); onToast('Moved', '⬡') },
     onError: () => onToast('Failed to move', '✖'),
@@ -134,7 +133,7 @@ export default function Pipeline({ pipeline=[], onToast }) {
           </div>
         </div>
         <div style={{ overflowX:'auto' }}>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, padding:16, minWidth:480 }}>
+          <div className="pipeline-board" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, padding:16 }}>
             {STAGES.map(stage => {
               const col = map[stage]
               return (
