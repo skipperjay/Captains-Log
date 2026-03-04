@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { PILLARS, guessPillar } from '../lib/constants'
 import { api } from '../lib/api'
 import AddContent from './AddContent'
+import ContentEditor from './ContentEditor'
 
 const STAGES = ['idea', 'in_progress', 'done']
 const STAGE_LABELS = { idea:'Ideas', in_progress:'In Progress', done:'Done' }
@@ -36,23 +37,29 @@ function MoveMenu({ contentId, currentStage, onMove, onClose }) {
   )
 }
 
-function PipeCard({ item, stage, onMove, onDelete }) {
+function PipeCard({ item, stage, onMove, onDelete, onEdit }) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [hovering, setHovering] = useState(false)
   const pillar = item.pillar || guessPillar(item.title)
   const p = PILLARS[pillar] || { label:'Content', color:'var(--muted)' }
 
   return (
-    <div style={{
-      background:'var(--navy-800)', border:'1px solid rgba(255,255,255,.05)',
-      borderRadius:8, padding:'11px 12px', marginBottom:6,
-      position:'relative', transition:'border-color var(--t)',
-    }}
-      onMouseEnter={e=>e.currentTarget.style.borderColor='rgba(201,160,48,.18)'}
-      onMouseLeave={e=>e.currentTarget.style.borderColor='rgba(255,255,255,.05)'}
+    <div
+      onMouseEnter={()=>setHovering(true)}
+      onMouseLeave={()=>setHovering(false)}
+      onClick={()=>{ if(!menuOpen) onEdit() }}
+      style={{
+        background:'var(--navy-800)', border:'1px solid rgba(255,255,255,.05)',
+        borderRadius:8, padding:'11px 12px', marginBottom:6,
+        position:'relative', transition:'all var(--t)',
+        cursor:'pointer',
+      }}
+      onMouseOver={e=>e.currentTarget.style.borderColor='rgba(201,160,48,.25)'}
+      onMouseOut={e=>e.currentTarget.style.borderColor='rgba(255,255,255,.05)'}
     >
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:6 }}>
         <div style={{ fontSize:12, fontWeight:500, color:'var(--cream)', lineHeight:1.4, flex:1 }}>{item.title}</div>
-        <div style={{ display:'flex', gap:3, flexShrink:0 }}>
+        <div style={{ display:'flex', gap:3, flexShrink:0 }} onClick={e=>e.stopPropagation()}>
           <button onClick={()=>setMenuOpen(o=>!o)} style={{
             background:'rgba(255,255,255,.06)', border:'none', color:'var(--muted)',
             borderRadius:4, padding:'2px 6px', cursor:'pointer', fontSize:11,
@@ -63,7 +70,7 @@ function PipeCard({ item, stage, onMove, onDelete }) {
           }} title="Delete">✕</button>
         </div>
       </div>
-      <div style={{ display:'flex', gap:4, marginTop:7, flexWrap:'wrap' }}>
+      <div style={{ display:'flex', gap:4, marginTop:7, flexWrap:'wrap', alignItems:'center' }}>
         <span style={{ fontFamily:'var(--font-mono)', fontSize:8, padding:'2px 7px', borderRadius:8, background:p.color+'18', color:p.color }}>
           {p.label.split(' ').slice(-1)[0]}
         </span>
@@ -72,10 +79,13 @@ function PipeCard({ item, stage, onMove, onDelete }) {
             {item.format.replace(/_/g,' ')}
           </span>
         )}
+        {hovering && (
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:8, color:'var(--gold-400)', opacity:.7, marginLeft:'auto' }}>Open →</span>
+        )}
       </div>
       {menuOpen && (
         <>
-          <div style={{ position:'fixed', inset:0, zIndex:49 }} onClick={()=>setMenuOpen(false)}/>
+          <div style={{ position:'fixed', inset:0, zIndex:49 }} onClick={e=>{e.stopPropagation();setMenuOpen(false)}}/>
           <MoveMenu contentId={item.id} currentStage={stage} onMove={onMove} onClose={()=>setMenuOpen(false)}/>
         </>
       )}
@@ -85,14 +95,18 @@ function PipeCard({ item, stage, onMove, onDelete }) {
 
 export default function Pipeline({ pipeline=[], onToast }) {
   const [showAdd, setShowAdd] = useState(false)
+  const [editingId, setEditingId] = useState(null)
   const qc = useQueryClient()
+
+  if (editingId) {
+    return <ContentEditor contentId={editingId} onBack={() => setEditingId(null)} onToast={onToast}/>
+  }
 
   const deleteMut = useMutation({
     mutationFn: (id) => api.deleteContent(id),
     onSuccess: () => { qc.invalidateQueries(['dashboard']); qc.invalidateQueries(['content']); onToast('Deleted', '✕') },
     onError: () => onToast('Failed to delete', '✖'),
   })
-  const moveMut = useMutation({
     mutationFn: ({ id, stage }) => api.moveContent(id, stage),
     onSuccess: () => { qc.invalidateQueries(['dashboard']); qc.invalidateQueries(['content']); onToast('Moved', '⬡') },
     onError: () => onToast('Failed to move', '✖'),
@@ -150,7 +164,7 @@ export default function Pipeline({ pipeline=[], onToast }) {
                   </div>
                   {col.items.length > 0
                     ? col.items.map(item => (
-                        <PipeCard key={item.id} item={item} stage={stage} onMove={(id,s)=>moveMut.mutate({id,stage:s})} onDelete={id=>deleteMut.mutate(id)}/>
+                        <PipeCard key={item.id} item={item} stage={stage} onMove={(id,s)=>moveMut.mutate({id,stage:s})} onDelete={id=>deleteMut.mutate(id)} onEdit={()=>setEditingId(item.id)}/>
                       ))
                     : <div style={{ color:'var(--muted)', fontSize:10, padding:'16px 6px', textAlign:'center', opacity:.3 }}>Empty</div>
                   }
