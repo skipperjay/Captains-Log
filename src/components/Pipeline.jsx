@@ -107,6 +107,7 @@ export default function Pipeline({ pipeline=[], onToast }) {
     onSuccess: () => { qc.invalidateQueries(['dashboard']); qc.invalidateQueries(['content']); onToast('Deleted', '✕') },
     onError: () => onToast('Failed to delete', '✖'),
   })
+  const moveMut = useMutation({
     mutationFn: ({ id, stage }) => api.moveContent(id, stage),
     onSuccess: () => { qc.invalidateQueries(['dashboard']); qc.invalidateQueries(['content']); onToast('Moved', '⬡') },
     onError: () => onToast('Failed to move', '✖'),
