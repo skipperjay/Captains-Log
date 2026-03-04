@@ -6,10 +6,10 @@ import AddContent from './AddContent'
 import ContentEditor from './ContentEditor'
 import PhaseBar from './PhaseBar'
 
-const STAGES = ['idea', 'in_progress', 'done']
-const STAGE_LABELS = { idea:'Ideas', in_progress:'In Progress', done:'Done' }
-const STAGE_COLORS = { idea:'rgba(106,125,154,.15)', in_progress:'rgba(201,160,48,.1)', done:'rgba(46,200,128,.1)' }
-const STAGE_ACCENT = { idea:'var(--muted)', in_progress:'var(--gold-400)', done:'var(--success)' }
+const STAGES = ['backlog', 'in_progress', 'done']
+const STAGE_LABELS = { backlog:'Backlog', in_progress:'In Progress', done:'Done' }
+const STAGE_COLORS = { backlog:'rgba(106,125,154,.15)', in_progress:'rgba(201,160,48,.1)', done:'rgba(46,200,128,.1)' }
+const STAGE_ACCENT = { backlog:'var(--muted)', in_progress:'var(--gold-400)', done:'var(--success)' }
 
 function MoveMenu({ contentId, currentStage, onMove, onClose }) {
   const others = STAGES.filter(s => s !== currentStage)
