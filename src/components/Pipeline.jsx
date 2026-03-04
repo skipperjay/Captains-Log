@@ -98,10 +98,6 @@ export default function Pipeline({ pipeline=[], onToast }) {
   const [editingId, setEditingId] = useState(null)
   const qc = useQueryClient()
 
-  if (editingId) {
-    return <ContentEditor contentId={editingId} onBack={() => setEditingId(null)} onToast={onToast}/>
-  }
-
   const deleteMut = useMutation({
     mutationFn: (id) => api.deleteContent(id),
     onSuccess: () => { qc.invalidateQueries(['dashboard']); qc.invalidateQueries(['content']); onToast('Deleted', '✕') },
@@ -133,6 +129,10 @@ export default function Pipeline({ pipeline=[], onToast }) {
   })
 
   const total = Object.values(map).reduce((a,s)=>a+s.total,0)
+
+  if (editingId) {
+    return <ContentEditor contentId={editingId} onBack={() => setEditingId(null)} onToast={onToast}/>
+  }
 
   return (
     <>
