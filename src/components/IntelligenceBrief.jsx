@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react'
 
 const CACHE_KEY = 'captain_brief_'
-const today = () => new Date().toISOString().split('T')[0]
+const today = () => new Date().toLocaleDateString('en-CA')
 
 function getCached() {
   try {
     const raw = localStorage.getItem(CACHE_KEY + today())
-    return raw ? JSON.parse(raw) : null
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    // Don't use cache if it's clearly a bad value
+    if (!parsed || parsed.length < 20) return null
+    return parsed
   } catch { return null }
 }
 
@@ -101,8 +105,10 @@ export default function IntelligenceBrief({ dashboardData, habits, projects, rev
   }
 
   useEffect(() => {
-    if (habitsTotal >= 0 && !brief) generate()
-  }, [habitsTotal])
+    if (habitsTotal > 0 || projects?.length > 0) {
+      if (!brief) generate()
+    }
+  }, [habitsTotal, projects?.length])
 
   const greeting = () => {
     const h = new Date().getHours()
