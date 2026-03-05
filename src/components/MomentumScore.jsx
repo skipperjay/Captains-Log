@@ -1,31 +1,34 @@
 import React from 'react'
 
-function calcMomentum({ habitPct, contentExecPct, projectActivity, workoutSessions }) {
+function calcMomentum({ habitPct, contentExecPct, projectActivity, workoutSessions, phasesThisWeek }) {
   let score = 0
   let max = 0
 
-  // Habits — 40% weight
-  if (habitPct !== null) { score += habitPct * 0.4; max += 40 }
+  // Habits — 35% weight
+  if (habitPct !== null) { score += habitPct * 0.35; max += 35 }
 
-  // Content execution — 30% weight
-  if (contentExecPct !== null) { score += contentExecPct * 0.3; max += 30 }
+  // Content execution — 25% weight
+  if (contentExecPct !== null) { score += contentExecPct * 0.25; max += 25 }
 
-  // Project activity this week — 20% weight (any update = full points)
+  // Project activity — 20% weight
   if (projectActivity !== null) { score += (projectActivity > 0 ? 100 : 0) * 0.2; max += 20 }
 
-  // Workouts this week — 10% weight
+  // Pipeline phases completed this week — 10% weight
+  if (phasesThisWeek !== null) { score += Math.min(100, (phasesThisWeek / 3) * 100) * 0.1; max += 10 }
+
+  // Workouts — 10% weight
   if (workoutSessions !== null) { score += Math.min(100, (workoutSessions / 3) * 100) * 0.1; max += 10 }
 
-  if (max === 0) return { label: 'No Data', color: 'var(--muted)', pct: 0, direction: 'steady' }
+  if (max === 0) return { label: 'No Data', color: 'var(--muted)', pct: 0 }
 
   const pct = Math.round((score / max) * 100)
 
-  if (pct >= 70) return { label: 'Forward', color: 'var(--success)', pct, direction: 'forward', arrow: '↑' }
-  if (pct >= 40) return { label: 'Steady', color: 'var(--gold-400)', pct, direction: 'steady', arrow: '→' }
-  return { label: 'Slipping', color: 'var(--danger)', pct, direction: 'slipping', arrow: '↓' }
+  if (pct >= 70) return { label: 'Forward',  color: 'var(--success)',  pct, arrow: '↑' }
+  if (pct >= 40) return { label: 'Steady',   color: 'var(--gold-400)', pct, arrow: '→' }
+  return             { label: 'Slipping',  color: 'var(--danger)',   pct, arrow: '↓' }
 }
 
-export default function MomentumScore({ habitPct, contentExecPct, projects, workouts }) {
+export default function MomentumScore({ habitPct, contentExecPct, projects, workouts, content }) {
   const projectActivity = (projects || []).filter(p => {
     const updates = p.updates || []
     const thisWeek = new Date(Date.now() - 7 * 86400000)
@@ -33,11 +36,16 @@ export default function MomentumScore({ habitPct, contentExecPct, projects, work
   }).length
 
   const workoutSessions = (workouts || []).filter(w => {
-    const d = new Date(w.session_date)
-    return d > new Date(Date.now() - 7 * 86400000)
+    return new Date(w.session_date) > new Date(Date.now() - 7 * 86400000)
   }).length
 
-  const momentum = calcMomentum({ habitPct, contentExecPct, projectActivity, workoutSessions })
+  // Count pipeline phases completed this week
+  const thisWeek = new Date(Date.now() - 7 * 86400000)
+  const phasesThisWeek = (content || []).flatMap(c => c.phases || [])
+    .filter(p => p.completed && p.completed_at && new Date(p.completed_at) > thisWeek)
+    .length
+
+  const momentum = calcMomentum({ habitPct, contentExecPct, projectActivity, workoutSessions, phasesThisWeek })
 
   return (
     <div style={{
@@ -60,7 +68,7 @@ export default function MomentumScore({ habitPct, contentExecPct, projects, work
       <div style={{ textAlign:'right' }}>
         <div style={{ fontFamily:'var(--font-mono)', fontSize:22, fontWeight:700, color:momentum.color }}>{momentum.pct}%</div>
         <div style={{ fontFamily:'var(--font-mono)', fontSize:8, color:'var(--muted)', marginTop:2 }}>
-          {projectActivity} project{projectActivity !== 1 ? 's' : ''} active · {workoutSessions} workout{workoutSessions !== 1 ? 's' : ''}
+          {phasesThisWeek} phase{phasesThisWeek !== 1 ? 's' : ''} done · {workoutSessions} workout{workoutSessions !== 1 ? 's' : ''}
         </div>
       </div>
     </div>

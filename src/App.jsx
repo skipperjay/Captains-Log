@@ -245,6 +245,7 @@ export default function App() {
                   contentExecPct={contentExecPct}
                   projects={projects||[]}
                   workouts={workouts||[]}
+                  content={content||[]}
                 />
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }} className="gauge-grid">
                   <Gauge pct={habitPct} label="Today's Habits" sub={habitsTotal>0?`${habitsDone} of ${habitsTotal} habits logged`:'Log habits via WhatsApp'} size="large"/>
