@@ -4,8 +4,8 @@ function calcMomentum({ habitPct, contentExecPct, projectActivity, workoutSessio
   let score = 0
   let max = 0
 
-  // Habits — 35% weight
-  if (habitPct !== null) { score += habitPct * 0.35; max += 35 }
+  // Habits — 25% weight
+  if (habitPct !== null) { score += habitPct * 0.25; max += 25 }
 
   // Content execution — 25% weight
   if (contentExecPct !== null) { score += contentExecPct * 0.25; max += 25 }
@@ -13,11 +13,11 @@ function calcMomentum({ habitPct, contentExecPct, projectActivity, workoutSessio
   // Project activity — 20% weight
   if (projectActivity !== null) { score += (projectActivity > 0 ? 100 : 0) * 0.2; max += 20 }
 
-  // Pipeline phases completed this week — 10% weight
-  if (phasesThisWeek !== null) { score += Math.min(100, (phasesThisWeek / 3) * 100) * 0.1; max += 10 }
+  // Pipeline phases completed this week — 15% weight
+  if (phasesThisWeek !== null) { score += Math.min(100, (phasesThisWeek / 3) * 100) * 0.15; max += 15 }
 
-  // Workouts — 10% weight
-  if (workoutSessions !== null) { score += Math.min(100, (workoutSessions / 3) * 100) * 0.1; max += 10 }
+  // Workouts — 15% weight
+  if (workoutSessions !== null) { score += Math.min(100, (workoutSessions / 3) * 100) * 0.15; max += 15 }
 
   if (max === 0) return { label: 'No Data', color: 'var(--muted)', pct: 0 }
 
