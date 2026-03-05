@@ -98,7 +98,9 @@ export default function IntelligenceBrief({ dashboardData, habits, projects, rev
         daysSince, recentReview,
       })
       if (text) { setBrief(text); setCached(text) }
+      else { setError('Brief returned empty — try regenerating') }
     } catch (e) {
+      console.error('Brief generation error:', e)
       setError('Could not generate brief')
     }
     setLoading(false)
