@@ -58,7 +58,13 @@ Write 2-3 sentences. Be specific, direct, and grounding. Reference actual number
     }),
   })
 
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}))
+    console.error('Brief API error:', response.status, err)
+    throw new Error(err.error || `API ${response.status}`)
+  }
   const result = await response.json()
+  console.log('Brief API result:', JSON.stringify(result).slice(0, 200))
   return result.content?.[0]?.text || null
 }
 
