@@ -1,7 +1,7 @@
 import React from 'react'
 
-export default function ProofOfWork({ habits, todos, projects, workouts }) {
-  const today = new Date().toISOString().split('T')[0]
+export default function ProofOfWork({ habits, todos, projects, workouts, content }) {
+  const today = new Date().toLocaleDateString('en-CA')
 
   const items = []
 
@@ -44,6 +44,16 @@ export default function ProofOfWork({ habits, todos, projects, workouts }) {
     text: `${u.project_name}: ${u.body.slice(0, 60)}${u.body.length > 60 ? '...' : ''}`,
     type: 'project',
   }))
+
+  // Pipeline phases completed today
+  ;(content || []).forEach(c => {
+    (c.phases || []).filter(p => p.completed && p.completed_at && p.completed_at.split('T')[0] === today)
+      .forEach(p => items.push({
+        icon: '⬡', color: 'var(--gold-400)',
+        text: `${c.title}: ${p.phase} complete`,
+        type: 'phase',
+      }))
+  })
 
   if (items.length === 0) return (
     <div style={{

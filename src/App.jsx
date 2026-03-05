@@ -260,6 +260,7 @@ export default function App() {
                   todos={todos||[]}
                   projects={projects||[]}
                   workouts={workouts||[]}
+                  content={content||[]}
                 />
               </div>
               {/* Calendar sidebar */}
