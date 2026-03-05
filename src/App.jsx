@@ -242,7 +242,6 @@ export default function App() {
                 />
                 <MomentumScore
                   habitPct={habitPct}
-                  contentExecPct={contentExecPct}
                   projects={projects||[]}
                   workouts={workouts||[]}
                   content={content||[]}

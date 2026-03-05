@@ -6,7 +6,7 @@ function barColor(pct) {
   return 'var(--danger)'
 }
 
-function calcMomentum({ habitPct, contentExecPct, projectActivity, workoutSessions, phasesThisWeek }) {
+function calcMomentum({ habitPct, contentActivePct, contentActiveTouched, contentActiveTotal, milestonePct, milestonesDone, milestonesTotal, projectUpdatePct, projectsUpdated, projectsActiveCount, workoutSessions, phasesThisWeek }) {
   let score = 0
   let max = 0
 
@@ -17,15 +17,17 @@ function calcMomentum({ habitPct, contentExecPct, projectActivity, workoutSessio
   if (habitScore !== null) { score += habitScore * 0.25; max += 25 }
   factors.push({ name: 'Habits', weight: 25, pct: Math.round(habitScore ?? 0), sub: `${Math.round(habitScore ?? 0)}% today` })
 
-  // Content execution — 25% weight
-  const contentScore = contentExecPct !== null ? contentExecPct : null
+  // Content pipeline activity this week — 25% weight
+  const contentScore = contentActivePct !== null ? contentActivePct : null
   if (contentScore !== null) { score += contentScore * 0.25; max += 25 }
-  factors.push({ name: 'Content', weight: 25, pct: Math.round(contentScore ?? 0), sub: `${Math.round(contentScore ?? 0)}% execution` })
+  factors.push({ name: 'Content', weight: 25, pct: Math.round(contentScore ?? 0), sub: `${contentActiveTouched ?? 0}/${contentActiveTotal ?? 0} items active` })
 
-  // Project activity — 20% weight
-  const projectScore = projectActivity !== null ? (projectActivity > 0 ? 100 : 0) : null
+  // Projects — 20% weight (50% milestones + 50% weekly activity)
+  const mPct = milestonePct ?? 0
+  const uPct = projectUpdatePct ?? 0
+  const projectScore = (milestonePct !== null || projectUpdatePct !== null) ? (mPct * 0.5 + uPct * 0.5) : null
   if (projectScore !== null) { score += projectScore * 0.2; max += 20 }
-  factors.push({ name: 'Projects', weight: 20, pct: projectScore ?? 0, sub: `${projectActivity ?? 0} active this week` })
+  factors.push({ name: 'Projects', weight: 20, pct: Math.round(projectScore ?? 0), sub: `${milestonesDone ?? 0}/${milestonesTotal ?? 0} milestones · ${projectsUpdated ?? 0}/${projectsActiveCount ?? 0} active` })
 
   // Pipeline phases completed this week — 15% weight
   const phaseScore = phasesThisWeek !== null ? Math.min(100, (phasesThisWeek / 3) * 100) : null
@@ -46,26 +48,40 @@ function calcMomentum({ habitPct, contentExecPct, projectActivity, workoutSessio
   return             { label: 'Slipping',  color: 'var(--danger)',   pct, arrow: '↓', factors }
 }
 
-export default function MomentumScore({ habitPct, contentExecPct, projects, workouts, content }) {
+export default function MomentumScore({ habitPct, projects, workouts, content }) {
   const [expanded, setExpanded] = useState(false)
 
-  const projectActivity = (projects || []).filter(p => {
-    const updates = p.updates || []
-    const thisWeek = new Date(Date.now() - 7 * 86400000)
-    return updates.some(u => u && new Date(u.created_at) > thisWeek)
-  }).length
+  const thisWeek = new Date(Date.now() - 7 * 86400000)
+
+  // Content: how many pipeline items had phase activity this week
+  const contentItems = content || []
+  const contentActiveTotal = contentItems.length
+  const contentActiveTouched = contentItems.filter(c =>
+    (c.phases || []).some(p => p.completed && p.completed_at && new Date(p.completed_at) > thisWeek)
+  ).length
+  const contentActivePct = contentActiveTotal > 0 ? Math.min(100, (contentActiveTouched / contentActiveTotal) * 100) : null
+
+  // Projects: 50% milestone completion + 50% weekly update activity
+  const activeProjects = (projects || []).filter(p => p.status === 'active')
+  const milestonesTotal = activeProjects.reduce((sum, p) => sum + (parseInt(p.total_milestones) || 0), 0)
+  const milestonesDone = activeProjects.reduce((sum, p) => sum + (parseInt(p.completed_milestones) || 0), 0)
+  const milestonePct = milestonesTotal > 0 ? Math.min(100, (milestonesDone / milestonesTotal) * 100) : null
+  const projectsActiveCount = activeProjects.length
+  const projectsUpdated = activeProjects.filter(p =>
+    (p.updates || []).some(u => u && new Date(u.created_at) > thisWeek)
+  ).length
+  const projectUpdatePct = projectsActiveCount > 0 ? Math.min(100, (projectsUpdated / projectsActiveCount) * 100) : null
 
   const workoutSessions = (workouts || []).filter(w => {
-    return new Date(w.session_date) > new Date(Date.now() - 7 * 86400000)
+    return new Date(w.session_date) > thisWeek
   }).length
 
   // Count pipeline phases completed this week
-  const thisWeek = new Date(Date.now() - 7 * 86400000)
-  const phasesThisWeek = (content || []).flatMap(c => c.phases || [])
+  const phasesThisWeek = contentItems.flatMap(c => c.phases || [])
     .filter(p => p.completed && p.completed_at && new Date(p.completed_at) > thisWeek)
     .length
 
-  const momentum = calcMomentum({ habitPct, contentExecPct, projectActivity, workoutSessions, phasesThisWeek })
+  const momentum = calcMomentum({ habitPct, contentActivePct, contentActiveTouched, contentActiveTotal, milestonePct, milestonesDone, milestonesTotal, projectUpdatePct, projectsUpdated, projectsActiveCount, workoutSessions, phasesThisWeek })
 
   return (
     <div
