@@ -6,10 +6,10 @@ import AddContent from './AddContent'
 import ContentEditor from './ContentEditor'
 import PhaseBar from './PhaseBar'
 
-const STAGES = ['backlog', 'in_progress', 'done']
-const STAGE_LABELS = { backlog:'Backlog', in_progress:'In Progress', done:'Done' }
-const STAGE_COLORS = { backlog:'rgba(106,125,154,.15)', in_progress:'rgba(201,160,48,.1)', done:'rgba(46,200,128,.1)' }
-const STAGE_ACCENT = { backlog:'var(--muted)', in_progress:'var(--gold-400)', done:'var(--success)' }
+const STAGES = ['backlog', 'in_progress', 'done', 'published']
+const STAGE_LABELS = { backlog:'Backlog', in_progress:'In Progress', done:'Done', published:'Published' }
+const STAGE_COLORS = { backlog:'rgba(106,125,154,.15)', in_progress:'rgba(201,160,48,.1)', done:'rgba(46,200,128,.1)', published:'rgba(99,179,237,.1)' }
+const STAGE_ACCENT = { backlog:'var(--muted)', in_progress:'var(--gold-400)', done:'var(--success)', published:'#63b3ed' }
 
 function MoveMenu({ contentId, currentStage, onMove, onClose }) {
   const others = STAGES.filter(s => s !== currentStage)
@@ -106,7 +106,14 @@ export default function Pipeline({ pipeline=[], onToast }) {
     onError: () => onToast('Failed to delete', '✖'),
   })
   const moveMut = useMutation({
-    mutationFn: ({ id, stage }) => api.moveContent(id, stage),
+    mutationFn: ({ id, stage }) => {
+      const body = { stage }
+      if (stage === 'published') {
+        body.status = 'published'
+        body.published_at = new Date().toISOString()
+      }
+      return api.updateContentFull(id, body)
+    },
     onSuccess: () => { qc.invalidateQueries(['dashboard']); qc.invalidateQueries(['content']); onToast('Moved', '⬡') },
     onError: () => onToast('Failed to move', '✖'),
   })
@@ -115,12 +122,11 @@ export default function Pipeline({ pipeline=[], onToast }) {
     return <ContentEditor contentId={editingId} onBack={() => setEditingId(null)} onToast={onToast}/>
   }
 
-  // Map pipeline data to simplified 3-stage view
-  const map = { backlog:{ total:0, items:[] }, in_progress:{ total:0, items:[] }, done:{ total:0, items:[] } }
+  // Map pipeline data to 4-stage view
+  const map = { backlog:{ total:0, items:[] }, in_progress:{ total:0, items:[] }, done:{ total:0, items:[] }, published:{ total:0, items:[] } }
 
   pipeline.forEach(p => {
-    // Map old stages to new 3-stage system
-    const stageMap = { backlog:'backlog', in_progress:'in_progress', review:'in_progress', approved:'in_progress', done:'done' }
+    const stageMap = { backlog:'backlog', in_progress:'in_progress', review:'in_progress', approved:'in_progress', done:'done', published:'published' }
     const mapped = stageMap[p.stage] || 'backlog'
     if (map[mapped]) {
       map[mapped].total += parseInt(p.total)||0

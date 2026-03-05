@@ -199,10 +199,11 @@ export default function App() {
   const ytSubs     = dash?.youtube?.subscribers || 0
   const igFollow   = dash?.instagram?.followers || 0
 
-  const publishedContent  = (content||[]).filter(c=>c.status==='published')
+  const allContent        = content||[]
+  const publishedContent  = allContent.filter(c=>c.status==='published' || c.stage==='published')
   const published         = publishedContent.length
-  const totalPlanned      = (reviews||[]).reduce((a,r)=>a+(r.planned||0),0)
-  const totalPublished    = (reviews||[]).reduce((a,r)=>a+(r.published||0),0)
+  const totalPlanned      = allContent.length
+  const totalPublished    = published
   const contentExecPct    = totalPlanned>0 ? Math.min(100,(totalPublished/totalPlanned)*100) : 0
 
   const habitList   = habits||[]
