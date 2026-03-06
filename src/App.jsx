@@ -237,11 +237,12 @@ export default function App() {
             <div style={{ display:'flex', gap:18, alignItems:'flex-start' }}>
               {/* Main column */}
               <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:16 }}>
-                <IntelligenceBrief
-                  dashboardData={dash}
+                <ProofOfWork
                   habits={habitList}
+                  todos={todos||[]}
                   projects={projects||[]}
-                  reviews={dailyReviews||[]}
+                  workouts={workouts||[]}
+                  content={content||[]}
                 />
                 <MomentumScore
                   habitPct={habitPct}
@@ -257,12 +258,11 @@ export default function App() {
                 <Todos todos={todos||[]} onToast={showToast}/>
                 <QuickLogWorkout onToast={showToast}/>
                 <QuickCapture onToast={showToast}/>
-                <ProofOfWork
+                <IntelligenceBrief
+                  dashboardData={dash}
                   habits={habitList}
-                  todos={todos||[]}
                   projects={projects||[]}
-                  workouts={workouts||[]}
-                  content={content||[]}
+                  reviews={dailyReviews||[]}
                 />
               </div>
               {/* Calendar sidebar */}
