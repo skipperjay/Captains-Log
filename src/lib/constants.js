@@ -18,6 +18,7 @@ export const NAV = [
   { id:'performance', icon:'▲', label:'Performance'    },
   { id:'review',      icon:'◻', label:'Daily Review'   },
   { id:'health',      icon:'◎', label:'Process Health' },
+  { id:'habits',      icon:'✓', label:'Habits & Todos' },
 ]
 
 export function getMonday(d = new Date()) {

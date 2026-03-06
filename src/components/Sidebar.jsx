@@ -3,7 +3,7 @@ import { NAV } from '../lib/constants'
 
 export default function Sidebar({ page, setPage }) {
   const [showMore, setShowMore] = useState(false)
-  const secondaryNav = NAV.filter(n => !['brief','pipeline','projects','workouts'].includes(n.id))
+  const secondaryNav = NAV.filter(n => !['brief','pipeline','projects','workouts','habits'].includes(n.id))
 
   return (
     <>
@@ -60,7 +60,7 @@ export default function Sidebar({ page, setPage }) {
         alignItems:'center', justifyContent:'space-around',
         padding:'0 4px',
       }} className="mobile-nav">
-        {NAV.filter(n => ['brief','pipeline','projects','workouts'].includes(n.id)).map(({ id, icon, label }) => (
+        {NAV.filter(n => ['brief','pipeline','projects','workouts','habits'].includes(n.id)).map(({ id, icon, label }) => (
           <button key={id} onClick={() => { setPage(id); setShowMore(false) }} style={{
             display:'flex', flexDirection:'column', alignItems:'center', gap:3,
             padding:'6px 4px', border:'none', background:'none',

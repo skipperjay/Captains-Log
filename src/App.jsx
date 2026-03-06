@@ -18,6 +18,7 @@ import CalendarSidebar from './components/CalendarSidebar'
 import IntelligenceBrief from './components/IntelligenceBrief'
 import MomentumScore from './components/MomentumScore'
 import ProofOfWork from './components/ProofOfWork'
+import HabitsTodos from './pages/HabitsTodos'
 import { GrowthChart, PillarChart, ExecChart } from './components/Charts'
 import { api } from './lib/api'
 import { PILLARS, fmtDate } from './lib/constants'
@@ -299,6 +300,9 @@ export default function App() {
 
           {/* ══ PROCESS HEALTH ══ */}
           {page==='health' && <ProcessHealth execPct={contentExecPct} published={published} dailyReviews={dailyReviews||[]}/>}
+
+          {/* ══ HABITS & TODOS ══ */}
+          {page==='habits' && <HabitsTodos habits={habitList} todos={todos||[]} onToast={showToast}/>}
 
         </div>
       </main>
