@@ -46,10 +46,12 @@ export const api = {
   // ── Waypoint ──
   habitsToday:    ()      => req('/waypoint/habits/today'),
   logHabit:       (b)     => req('/waypoint/habits/log',          { method:'POST', body:JSON.stringify(b) }),
+  updateHabit:    (id, b) => req(`/waypoint/habits/${id}`,        { method:'PATCH', body:JSON.stringify(b) }),
   todos:          ()      => req('/waypoint/todos'),
   completeTodo:   (id)    => req(`/waypoint/todos/${id}/complete`,{ method:'POST' }),
   deleteTodo:     (id)    => req(`/waypoint/todos/${id}`,         { method:'DELETE' }),
   snoozeTodo:     (id)    => req(`/waypoint/todos/${id}/snooze`,  { method:'POST' }),
+  updateTodo:     (id, b) => req(`/waypoint/todos/${id}`,         { method:'PATCH', body:JSON.stringify(b) }),
   addWaypointTodo:(b)     => req('/waypoint/todos',               { method:'POST', body:JSON.stringify(b) }),
   capture:        (b)     => req('/waypoint/capture',             { method:'POST', body:JSON.stringify(b) }),
   logWorkoutSet:        (b)   => req('/waypoint/workouts/log-set',          { method:'POST', body:JSON.stringify(b) }),
