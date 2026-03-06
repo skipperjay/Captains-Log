@@ -207,8 +207,9 @@ export default function App() {
   const contentExecPct    = totalPlanned>0 ? Math.min(100,(totalPublished/totalPlanned)*100) : 0
 
   const habitList   = habits||[]
-  const habitsDone  = habitList.filter(h=>h.logged_today).length
-  const habitsTotal = habitList.length
+  const dueHabits   = habitList.filter(h=>h.due_today!==false)
+  const habitsDone  = dueHabits.filter(h=>h.logged_today).length
+  const habitsTotal = dueHabits.length
   const habitPct    = habitsTotal>0 ? Math.min(100,(habitsDone/habitsTotal)*100) : 0
 
   // Streak — consecutive days all habits logged
