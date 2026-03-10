@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { api } from '../lib/api'
 import { fmtDate } from '../lib/constants'
+import WorkoutInsight from './WorkoutInsight'
 
 const MONO = { fontFamily:'DM Mono,monospace', fontSize:9 }
 const TT = { background:'#091525', border:'1px solid rgba(201,160,48,.2)', borderRadius:6, fontFamily:'DM Mono,monospace', fontSize:11, color:'#f0ead8' }
@@ -254,6 +255,19 @@ export default function Workouts() {
     refetchInterval: 60_000,
   })
 
+  const mostRecentSession = sessions[0] || null
+
+  const { data: sessionAnalysis } = useQuery({
+    queryKey: ['session-analysis', mostRecentSession?.id],
+    queryFn: () => api.sessionAnalysis(mostRecentSession.id),
+    enabled: !!mostRecentSession?.id,
+  })
+
+  const { data: weeklyAnalysis } = useQuery({
+    queryKey: ['weekly-analysis'],
+    queryFn: () => api.weeklyAnalysis(),
+  })
+
   const deleteSessionMut = useMutation({
     mutationFn: (id) => api.deleteWorkoutSession(id),
     onSuccess: () => qc.invalidateQueries(['workouts']),
@@ -320,6 +334,38 @@ export default function Workouts() {
         )}
       </div>
 
+      {/* Session Recap */}
+      {mostRecentSession && sessionAnalysis && (
+        <div style={{ display:'flex', flexDirection:'column', gap:12, animation:'riseIn .45s .05s ease both' }}>
+          {/* Volume Breakdown Bars */}
+          {sessionAnalysis.muscle_groups?.length > 0 && (() => {
+            const maxVol = Math.max(...sessionAnalysis.muscle_groups.map(g => g.volume || 0))
+            return (
+              <div style={{ background:'var(--navy-900)', border:'1px solid rgba(255,255,255,.05)', borderRadius:'var(--r)', padding:'14px 18px' }}>
+                <div style={{ fontFamily:'var(--font-mono)', fontSize:9, letterSpacing:1.5, color:'var(--muted)', marginBottom:12 }}>VOLUME BREAKDOWN</div>
+                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                  {sessionAnalysis.muscle_groups.map(g => (
+                    <div key={g.name} style={{ display:'flex', alignItems:'center', gap:10 }}>
+                      <div style={{ fontFamily:'var(--font-mono)', fontSize:10, color:'var(--cream)', width:80, flexShrink:0, textTransform:'capitalize' }}>{g.name}</div>
+                      <div style={{ flex:1, height:14, background:'rgba(255,255,255,.04)', borderRadius:3, overflow:'hidden' }}>
+                        <div style={{
+                          height:'100%', borderRadius:3,
+                          width: maxVol > 0 ? `${(g.volume / maxVol) * 100}%` : '0%',
+                          background:'var(--gold-400)',
+                          transition:'width .4s ease',
+                        }}/>
+                      </div>
+                      <div style={{ fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', width:50, textAlign:'right', flexShrink:0 }}>{g.volume}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+          <WorkoutInsight mode="session" data={sessionAnalysis}/>
+        </div>
+      )}
+
       {/* Recent Sessions */}
       <div style={{ background:'var(--navy-900)', border:'1px solid rgba(255,255,255,.05)', borderRadius:'var(--r)', overflow:'hidden', animation:'riseIn .5s .1s ease both' }}>
         <div style={{ padding:'14px 18px', borderBottom:'1px solid rgba(255,255,255,.04)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
@@ -337,6 +383,64 @@ export default function Workouts() {
           ) : sessions.map(s => <SessionCard key={s.id} session={s} onDeleteSession={id=>deleteSessionMut.mutate(id)} onDeleteSet={id=>deleteSetMut.mutate(id)}/>)}
         </div>
       </div>
+
+      {/* This Week */}
+      {weeklyAnalysis && (
+        <div style={{ display:'flex', flexDirection:'column', gap:12, animation:'riseIn .55s .15s ease both' }}>
+          <div style={{ background:'var(--navy-900)', border:'1px solid rgba(255,255,255,.05)', borderRadius:'var(--r)', padding:'14px 18px', overflow:'hidden' }}>
+            <div style={{ fontFamily:'var(--font-disp)', fontSize:14, fontWeight:700, color:'var(--cream)', marginBottom:14 }}>This Week</div>
+
+            {/* Consistency bar */}
+            <div style={{ marginBottom:16 }}>
+              <div style={{ display:'flex', alignItems:'baseline', justifyContent:'space-between', marginBottom:6 }}>
+                <div style={{ fontFamily:'var(--font-mono)', fontSize:9, letterSpacing:1.5, color:'var(--muted)' }}>CONSISTENCY</div>
+                <div style={{ fontFamily:'var(--font-disp)', fontSize:18, fontWeight:700, color:'var(--cream)' }}>
+                  {weeklyAnalysis.sessions_completed}<span style={{ fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', fontWeight:400 }}>/{weeklyAnalysis.sessions_target} sessions</span>
+                </div>
+              </div>
+              <div style={{ height:6, background:'rgba(255,255,255,.04)', borderRadius:3, overflow:'hidden' }}>
+                <div style={{
+                  height:'100%', borderRadius:3,
+                  width: weeklyAnalysis.sessions_target > 0
+                    ? `${Math.min(100, (weeklyAnalysis.sessions_completed / weeklyAnalysis.sessions_target) * 100)}%`
+                    : '0%',
+                  background: weeklyAnalysis.sessions_completed >= weeklyAnalysis.sessions_target ? 'var(--success)' : 'var(--gold-400)',
+                  transition:'width .4s ease',
+                }}/>
+              </div>
+            </div>
+
+            {/* Volume change indicators */}
+            {weeklyAnalysis.muscle_groups?.length > 0 && (
+              <div>
+                <div style={{ fontFamily:'var(--font-mono)', fontSize:9, letterSpacing:1.5, color:'var(--muted)', marginBottom:10 }}>VOLUME VS LAST WEEK</div>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                  {weeklyAnalysis.muscle_groups.map(g => {
+                    const pct = g.pct_change || 0
+                    const isUp = pct > 5
+                    const isDown = pct < -5
+                    const color = isUp ? 'var(--success)' : isDown ? 'var(--danger)' : 'var(--muted)'
+                    const arrow = isUp ? '↑' : isDown ? '↓' : '→'
+                    return (
+                      <div key={g.name} style={{
+                        background:'rgba(255,255,255,.04)', borderRadius:'var(--rs)',
+                        padding:'6px 10px', display:'flex', alignItems:'center', gap:6,
+                      }}>
+                        <span style={{ fontFamily:'var(--font-mono)', fontSize:10, color:'var(--cream)', textTransform:'capitalize' }}>{g.name}</span>
+                        <span style={{ fontFamily:'var(--font-mono)', fontSize:11, color, fontWeight:600 }}>
+                          {arrow} {pct > 0 ? '+' : ''}{pct}%
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <WorkoutInsight mode="weekly" data={weeklyAnalysis}/>
+        </div>
+      )}
 
     </div>
   )

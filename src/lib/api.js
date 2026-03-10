@@ -67,4 +67,6 @@ export const api = {
   workouts:        ()         => req('/waypoint/workouts'),
   workoutRecords:  ()         => req('/waypoint/workouts/records'),
   workoutProgress: (exercise) => req(`/waypoint/workouts/progress/${encodeURIComponent(exercise)}`),
+  sessionAnalysis:  (id) => req(`/waypoint/workouts/session-analysis/${id}`),
+  weeklyAnalysis:   (week) => req(`/waypoint/workouts/weekly-analysis${week ? `?week=${week}` : ''}`),
 }
