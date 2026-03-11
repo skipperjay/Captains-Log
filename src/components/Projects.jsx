@@ -17,14 +17,135 @@ const inp = {
   transition: 'border-color var(--t)',
 }
 
+function AIMilestoneGenerator({ name, desc, onMilestonesGenerated }) {
+  const [loading, setLoading] = useState(false)
+  const [milestones, setMilestones] = useState(null) // [{title,checked,editing}]
+
+  async function generate() {
+    setLoading(true)
+    try {
+      const prompt = `You are a project planning assistant for a solopreneur named Jay who builds software products, creates content, and runs Skipper Media. Given the project name and description below, generate 6-10 specific, actionable milestones that represent the key steps to complete this project.
+
+Project name: ${name}
+Project description: ${desc || '(no description)'}
+
+Respond ONLY with a JSON array of milestone titles, no preamble, no markdown backticks, no explanation. Example format:
+["Milestone one", "Milestone two", "Milestone three"]
+
+Make milestones specific and sequential. Each should represent a meaningful checkpoint, not a vague task.`
+
+      const BASE = import.meta.env.VITE_API_URL || '/api'
+      const res = await fetch(`${BASE}/ai/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] }),
+      })
+      const data = await res.json()
+      const text = (data.content || data.text || '').trim()
+      const parsed = JSON.parse(text)
+      if (Array.isArray(parsed)) {
+        const ms = parsed.map(t => ({ title: t, checked: true }))
+        setMilestones(ms)
+        onMilestonesGenerated(ms)
+      }
+    } catch { /* silent */ }
+    setLoading(false)
+  }
+
+  function toggle(i) {
+    setMilestones(prev => {
+      const next = prev.map((m,j) => j===i ? { ...m, checked:!m.checked } : m)
+      onMilestonesGenerated(next)
+      return next
+    })
+  }
+  function updateTitle(i, title) {
+    setMilestones(prev => {
+      const next = prev.map((m,j) => j===i ? { ...m, title } : m)
+      onMilestonesGenerated(next)
+      return next
+    })
+  }
+  function remove(i) {
+    setMilestones(prev => {
+      const next = prev.filter((_,j) => j!==i)
+      onMilestonesGenerated(next)
+      return next
+    })
+  }
+  function addBlank() {
+    setMilestones(prev => {
+      const next = [...(prev||[]), { title:'', checked:true }]
+      onMilestonesGenerated(next)
+      return next
+    })
+  }
+
+  return (
+    <div>
+      {!milestones && (
+        <button onClick={generate} disabled={loading || !name.trim()} style={{
+          fontFamily:'var(--font-mono)', fontSize:9, padding:'7px 14px',
+          background:'rgba(201,160,48,.1)', color:'var(--gold-400)',
+          border:'1px solid rgba(201,160,48,.2)', borderRadius:'var(--rs)',
+          cursor: loading || !name.trim() ? 'default' : 'pointer', width:'100%',
+          opacity: !name.trim() ? .4 : 1,
+        }}>
+          {loading ? (
+            <span style={{ display:'inline-flex', gap:3, alignItems:'center' }}>
+              Generating<span className="loading-dots" style={{ display:'inline-flex', gap:2 }}>
+                {[0,1,2].map(i=><span key={i} style={{ width:3, height:3, borderRadius:'50%', background:'var(--gold-400)', animation:`pulse 1.2s ${i*.2}s infinite` }}/>)}
+              </span>
+            </span>
+          ) : 'Generate Milestones with AI'}
+        </button>
+      )}
+      {milestones && (
+        <div style={{ background:'var(--navy-800)', borderRadius:'var(--rs)', padding:12, display:'flex', flexDirection:'column', gap:4 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
+            <div style={{ fontFamily:'var(--font-mono)', fontSize:8, letterSpacing:1.5, color:'var(--muted)', textTransform:'uppercase' }}>AI Milestones</div>
+            <button onClick={()=>{setMilestones(null);onMilestonesGenerated(null)}} style={{ fontFamily:'var(--font-mono)', fontSize:8, padding:'2px 6px', background:'none', border:'1px solid rgba(255,255,255,.08)', borderRadius:'var(--rs)', color:'var(--muted)', cursor:'pointer' }}>↺ Regenerate</button>
+          </div>
+          {milestones.map((m,i) => (
+            <div key={i} style={{ display:'flex', alignItems:'center', gap:8, padding:'4px 0' }}>
+              <button onClick={()=>toggle(i)} style={{
+                width:16, height:16, borderRadius:4, flexShrink:0, cursor:'pointer',
+                background: m.checked ? 'var(--gold-400)' : 'transparent',
+                border: `2px solid ${m.checked ? 'var(--gold-400)' : 'rgba(255,255,255,.2)'}`,
+                display:'flex', alignItems:'center', justifyContent:'center', transition:'all var(--t)',
+              }}>
+                {m.checked && <span style={{ color:'var(--navy-900)', fontSize:9, fontWeight:700 }}>✓</span>}
+              </button>
+              <input value={m.title} onChange={e=>updateTitle(i,e.target.value)} style={{ ...inp, flex:1, fontFamily:'var(--font-mono)', fontSize:11, padding:'4px 8px', background:'transparent', border:'1px solid transparent', opacity: m.checked ? 1 : .5 }}
+                onFocus={e=>e.target.style.borderColor='rgba(255,255,255,.1)'}
+                onBlur={e=>e.target.style.borderColor='transparent'}
+              />
+              <button onClick={()=>remove(i)} style={{ background:'none', border:'none', color:'var(--muted)', cursor:'pointer', fontSize:11, padding:'2px 4px', opacity:.5 }}>✕</button>
+            </div>
+          ))}
+          <button onClick={addBlank} style={{ fontFamily:'var(--font-mono)', fontSize:9, color:'var(--muted)', background:'none', border:'1px dashed rgba(255,255,255,.1)', borderRadius:'var(--rs)', padding:'6px', cursor:'pointer', marginTop:4 }}>+ Add milestone</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function AddProjectModal({ onClose, onToast }) {
   const qc = useQueryClient()
   const [name, setName] = useState('')
   const [desc, setDesc] = useState('')
   const [targetDate, setTargetDate] = useState('')
+  const [aiMilestones, setAiMilestones] = useState(null)
 
   const mut = useMutation({
-    mutationFn: api.createProject,
+    mutationFn: async (body) => {
+      const project = await api.createProject(body)
+      if (aiMilestones?.length) {
+        const checked = aiMilestones.filter(m => m.checked && m.title.trim())
+        await Promise.all(checked.map(m => api.addMilestone(project.id, { title: m.title })))
+      }
+      return project
+    },
     onSuccess: () => { qc.invalidateQueries(['projects']); onToast('Project created', '🚀'); onClose() },
     onError: () => onToast('Failed to create project', '✖'),
   })
@@ -32,7 +153,7 @@ function AddProjectModal({ onClose, onToast }) {
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.7)', backdropFilter:'blur(8px)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}
       onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{ background:'var(--navy-900)', border:'1px solid rgba(201,160,48,.2)', borderRadius:'var(--r)', width:'100%', maxWidth:440, position:'relative', overflow:'hidden', animation:'riseIn .3s ease' }}>
+      <div style={{ background:'var(--navy-900)', border:'1px solid rgba(201,160,48,.2)', borderRadius:'var(--r)', width:'100%', maxWidth:440, position:'relative', overflow:'hidden', animation:'riseIn .3s ease', maxHeight:'90vh', overflowY:'auto' }}>
         <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,var(--gold-400),transparent)' }}/>
         <div style={{ padding:'18px 22px', borderBottom:'1px solid rgba(255,255,255,.04)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div style={{ fontFamily:'var(--font-disp)', fontSize:15, fontWeight:700, color:'var(--cream)' }}>New Project</div>
@@ -51,6 +172,7 @@ function AddProjectModal({ onClose, onToast }) {
             <label style={{ fontFamily:'var(--font-mono)', fontSize:8, letterSpacing:1.5, textTransform:'uppercase', color:'var(--muted)', display:'block', marginBottom:5 }}>Target Date</label>
             <input type="date" value={targetDate} onChange={e=>setTargetDate(e.target.value)} style={inp}/>
           </div>
+          <AIMilestoneGenerator name={name} desc={desc} onMilestonesGenerated={setAiMilestones}/>
           <div style={{ display:'flex', gap:8, justifyContent:'flex-end', paddingTop:4 }}>
             <button onClick={onClose} style={{ padding:'8px 16px', background:'none', color:'var(--muted)', border:'1px solid rgba(255,255,255,.08)', borderRadius:'var(--rs)', fontSize:12, cursor:'pointer' }}>Cancel</button>
             <button onClick={()=>mut.mutate({ name, description:desc, target_date:targetDate||null })} disabled={!name.trim()||mut.isPending} style={{ padding:'8px 20px', background:'var(--gold-400)', color:'var(--navy-900)', border:'none', borderRadius:'var(--rs)', fontSize:12, fontWeight:600, cursor:'pointer' }}>
@@ -72,6 +194,8 @@ function ProjectCard({ project, onToast }) {
   const [showUpdateInput, setShowUpdateInput] = useState(false)
   const [copilotTrigger, setCopilotTrigger] = useState(0)
   const [lastUpdateText, setLastUpdateText] = useState('')
+  const [suggestMilestones, setSuggestMilestones] = useState(null)
+  const [suggestLoading, setSuggestLoading] = useState(false)
   const qc = useQueryClient()
 
   const milestones = (project.milestones || []).filter(m => m && m.id).sort((a,b) => a.id - b.id)
@@ -196,8 +320,80 @@ function ProjectCard({ project, onToast }) {
               <div style={{ fontFamily:'var(--font-mono)', fontSize:8, letterSpacing:1.5, textTransform:'uppercase', color:'var(--gold-400)' }}>Milestones</div>
               <button onClick={()=>setShowMilestoneInput(s=>!s)} style={{ fontFamily:'var(--font-mono)', fontSize:8, padding:'3px 8px', background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.08)', borderRadius:'var(--rs)', color:'var(--muted)', cursor:'pointer' }}>+ Add</button>
             </div>
-            {milestones.length === 0 && !showMilestoneInput && (
-              <div style={{ fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', opacity:.6 }}>No milestones yet — add key steps to track progress</div>
+            {milestones.length === 0 && !showMilestoneInput && !suggestMilestones && (
+              <div style={{ fontFamily:'var(--font-mono)', fontSize:10, color:'var(--muted)', opacity:.6, marginBottom:8 }}>No milestones yet — add key steps to track progress</div>
+            )}
+            {milestones.length === 0 && !suggestMilestones && (
+              <button onClick={async()=>{
+                setSuggestLoading(true)
+                try {
+                  const prompt = `You are a project planning assistant for a solopreneur named Jay who builds software products, creates content, and runs Skipper Media. Given the project name and description below, generate 6-10 specific, actionable milestones that represent the key steps to complete this project.
+
+Project name: ${project.name}
+Project description: ${project.description || '(no description)'}
+
+Respond ONLY with a JSON array of milestone titles, no preamble, no markdown backticks, no explanation. Example format:
+["Milestone one", "Milestone two", "Milestone three"]
+
+Make milestones specific and sequential. Each should represent a meaningful checkpoint, not a vague task.`
+                  const BASE = import.meta.env.VITE_API_URL || '/api'
+                  const res = await fetch(`${BASE}/ai/complete`, {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({ messages:[{role:'user',content:prompt}] }),
+                  })
+                  const data = await res.json()
+                  const text = (data.content||data.text||'').trim()
+                  const parsed = JSON.parse(text)
+                  if (Array.isArray(parsed)) setSuggestMilestones(parsed.map(t=>({title:t,checked:true})))
+                } catch {}
+                setSuggestLoading(false)
+              }} disabled={suggestLoading} style={{
+                fontFamily:'var(--font-mono)', fontSize:9, padding:'7px 14px', width:'100%',
+                background:'rgba(201,160,48,.1)', color:'var(--gold-400)',
+                border:'1px solid rgba(201,160,48,.2)', borderRadius:'var(--rs)',
+                cursor: suggestLoading ? 'default' : 'pointer', marginBottom:8,
+              }}>
+                {suggestLoading ? (
+                  <span style={{ display:'inline-flex', gap:3, alignItems:'center' }}>
+                    Generating<span style={{ display:'inline-flex', gap:2 }}>
+                      {[0,1,2].map(i=><span key={i} style={{ width:3, height:3, borderRadius:'50%', background:'var(--gold-400)', animation:`pulse 1.2s ${i*.2}s infinite` }}/>)}
+                    </span>
+                  </span>
+                ) : 'Suggest Milestones'}
+              </button>
+            )}
+            {suggestMilestones && (
+              <div style={{ background:'var(--navy-800)', borderRadius:'var(--rs)', padding:10, marginBottom:8 }}>
+                {suggestMilestones.map((m,i) => (
+                  <div key={i} style={{ display:'flex', alignItems:'center', gap:8, padding:'4px 0' }}>
+                    <button onClick={()=>setSuggestMilestones(prev=>prev.map((x,j)=>j===i?{...x,checked:!x.checked}:x))} style={{
+                      width:16, height:16, borderRadius:4, flexShrink:0, cursor:'pointer',
+                      background: m.checked ? 'var(--gold-400)' : 'transparent',
+                      border:`2px solid ${m.checked ? 'var(--gold-400)' : 'rgba(255,255,255,.2)'}`,
+                      display:'flex', alignItems:'center', justifyContent:'center', transition:'all var(--t)',
+                    }}>
+                      {m.checked && <span style={{ color:'var(--navy-900)', fontSize:9, fontWeight:700 }}>✓</span>}
+                    </button>
+                    <input value={m.title} onChange={e=>setSuggestMilestones(prev=>prev.map((x,j)=>j===i?{...x,title:e.target.value}:x))} style={{ ...inp, flex:1, fontFamily:'var(--font-mono)', fontSize:11, padding:'4px 8px', background:'transparent', border:'1px solid transparent', opacity:m.checked?1:.5 }}
+                      onFocus={e=>e.target.style.borderColor='rgba(255,255,255,.1)'}
+                      onBlur={e=>e.target.style.borderColor='transparent'}
+                    />
+                    <button onClick={()=>setSuggestMilestones(prev=>prev.filter((_,j)=>j!==i))} style={{ background:'none', border:'none', color:'var(--muted)', cursor:'pointer', fontSize:11, padding:'2px 4px', opacity:.5 }}>✕</button>
+                  </div>
+                ))}
+                <div style={{ display:'flex', gap:6, marginTop:8 }}>
+                  <button onClick={async()=>{
+                    const checked = suggestMilestones.filter(m=>m.checked&&m.title.trim())
+                    await Promise.all(checked.map(m=>api.addMilestone(project.id,{title:m.title})))
+                    qc.invalidateQueries(['projects'])
+                    setSuggestMilestones(null)
+                    onToast(`${checked.length} milestones added`,'✓')
+                  }} style={{ padding:'6px 12px', background:'var(--gold-400)', border:'none', borderRadius:'var(--rs)', color:'var(--navy-900)', fontSize:10, fontWeight:600, cursor:'pointer', fontFamily:'var(--font-mono)' }}>
+                    Save {suggestMilestones.filter(m=>m.checked&&m.title.trim()).length} Milestones
+                  </button>
+                  <button onClick={()=>setSuggestMilestones(null)} style={{ padding:'6px 10px', background:'none', border:'1px solid rgba(255,255,255,.08)', borderRadius:'var(--rs)', color:'var(--muted)', fontSize:10, cursor:'pointer', fontFamily:'var(--font-mono)' }}>Cancel</button>
+                </div>
+              </div>
             )}
             {milestones.map(m => (
               <MilestoneRow key={m.id} milestone={m}
