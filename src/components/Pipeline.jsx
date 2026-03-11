@@ -157,7 +157,7 @@ export default function Pipeline({ pipeline=[], onToast }) {
           </div>
         </div>
         <div style={{ overflowX:'auto', WebkitOverflowScrolling:'touch' }}>
-          <div className="pipeline-board" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12, padding:16, minWidth:340 }}>
+          <div className="pipeline-board" style={{ display:'grid', gridTemplateColumns:`repeat(${STAGES.length},1fr)`, gap:12, padding:16, minWidth:340 }}>
             {STAGES.map(stage => {
               const col = map[stage]
               return (
