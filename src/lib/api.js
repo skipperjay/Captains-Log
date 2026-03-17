@@ -6,6 +6,7 @@ function getToken() {
   if (urlToken) {
     localStorage.setItem('captain_token', urlToken)
     window.history.replaceState({}, '', window.location.pathname)
+    return urlToken
   }
   return localStorage.getItem('captain_token') || 'jay-captain-2026'
 }

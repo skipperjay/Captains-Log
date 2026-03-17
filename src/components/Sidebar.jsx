@@ -1,9 +1,16 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { NAV } from '../lib/constants'
 
-export default function Sidebar({ page, setPage }) {
+export default function Sidebar() {
   const [showMore, setShowMore] = useState(false)
+  const location = useLocation()
   const secondaryNav = NAV.filter(n => !['brief','pipeline','projects','workouts','habits'].includes(n.id))
+
+  function isActive(nav) {
+    if (nav.path === '/') return location.pathname === '/'
+    return location.pathname.startsWith(nav.path)
+  }
 
   return (
     <>
@@ -22,21 +29,25 @@ export default function Sidebar({ page, setPage }) {
           <div style={{ fontFamily:'var(--font-mono)', fontSize:8, letterSpacing:1.5, color:'var(--muted)', marginTop:5 }}>PERSONAL OPERATING SYSTEM</div>
         </div>
         <nav style={{ padding:'16px 12px', flex:1, overflowY:'auto' }}>
-          {NAV.map(({ id, icon, label }) => (
-            <button key={id} onClick={() => setPage(id)} style={{
-              display:'flex', alignItems:'center', gap:10,
-              padding:'9px 11px', borderRadius:'var(--rs)',
-              cursor:'pointer', border:'none', width:'100%',
-              textAlign:'left', fontSize:12, fontWeight:500, marginBottom:2,
-              background: page===id ? 'rgba(201,160,48,.08)' : 'none',
-              color: page===id ? 'var(--gold-400)' : 'var(--muted)',
-              position:'relative', transition:'all var(--t)',
-            }}>
-              {page===id && <span style={{ position:'absolute', left:0, top:'15%', bottom:'15%', width:2, borderRadius:2, background:'var(--gold-400)' }}/>}
-              <span style={{ fontSize:14, width:18, textAlign:'center' }}>{icon}</span>
-              {label}
-            </button>
-          ))}
+          {NAV.map(nav => {
+            const active = isActive(nav)
+            return (
+              <Link key={nav.id} to={nav.path} style={{
+                display:'flex', alignItems:'center', gap:10,
+                padding:'9px 11px', borderRadius:'var(--rs)',
+                cursor:'pointer', border:'none', width:'100%',
+                textAlign:'left', fontSize:12, fontWeight:500, marginBottom:2,
+                background: active ? 'rgba(201,160,48,.08)' : 'none',
+                color: active ? 'var(--gold-400)' : 'var(--muted)',
+                position:'relative', transition:'all var(--t)',
+                textDecoration:'none',
+              }}>
+                {active && <span style={{ position:'absolute', left:0, top:'15%', bottom:'15%', width:2, borderRadius:2, background:'var(--gold-400)' }}/>}
+                <span style={{ fontSize:14, width:18, textAlign:'center' }}>{nav.icon}</span>
+                {nav.label}
+              </Link>
+            )
+          })}
         </nav>
         <div style={{ padding:'16px 22px', borderTop:'1px solid rgba(201,160,48,.08)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
@@ -60,18 +71,22 @@ export default function Sidebar({ page, setPage }) {
         alignItems:'center', justifyContent:'space-around',
         padding:'0 4px',
       }} className="mobile-nav">
-        {NAV.filter(n => ['brief','pipeline','projects','workouts','habits'].includes(n.id)).map(({ id, icon, label }) => (
-          <button key={id} onClick={() => { setPage(id); setShowMore(false) }} style={{
-            display:'flex', flexDirection:'column', alignItems:'center', gap:3,
-            padding:'6px 4px', border:'none', background:'none',
-            color: page===id ? 'var(--gold-400)' : 'rgba(255,255,255,.45)',
-            cursor:'pointer', flex:1, transition:'color var(--t)', minWidth:0,
-          }}>
-            {page===id && <span style={{ position:'absolute', top:0, width:28, height:2, borderRadius:2, background:'var(--gold-400)', marginTop:-1 }}/>}
-            <span style={{ fontSize:24 }}>{icon}</span>
-            <span style={{ fontFamily:'var(--font-mono)', fontSize:10, whiteSpace:'nowrap' }}>{label.split(' ')[0]}</span>
-          </button>
-        ))}
+        {NAV.filter(n => ['brief','pipeline','projects','workouts','habits'].includes(n.id)).map(nav => {
+          const active = isActive(nav)
+          return (
+            <Link key={nav.id} to={nav.path} onClick={() => setShowMore(false)} style={{
+              display:'flex', flexDirection:'column', alignItems:'center', gap:3,
+              padding:'6px 4px', border:'none', background:'none',
+              color: active ? 'var(--gold-400)' : 'rgba(255,255,255,.45)',
+              cursor:'pointer', flex:1, transition:'color var(--t)', minWidth:0,
+              textDecoration:'none',
+            }}>
+              {active && <span style={{ position:'absolute', top:0, width:28, height:2, borderRadius:2, background:'var(--gold-400)', marginTop:-1 }}/>}
+              <span style={{ fontSize:24 }}>{nav.icon}</span>
+              <span style={{ fontFamily:'var(--font-mono)', fontSize:10, whiteSpace:'nowrap' }}>{nav.label.split(' ')[0]}</span>
+            </Link>
+          )
+        })}
         <button onClick={() => setShowMore(s => !s)} style={{
           display:'flex', flexDirection:'column', alignItems:'center', gap:3,
           padding:'6px 4px', border:'none', background:'none',
@@ -99,19 +114,23 @@ export default function Sidebar({ page, setPage }) {
           }} className="mobile-drawer">
             <div style={{ fontFamily:'var(--font-mono)', fontSize:9, letterSpacing:2, textTransform:'uppercase', color:'var(--muted)', padding:'4px 8px 8px' }}>More Pages</div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-              {secondaryNav.map(({ id, icon, label }) => (
-                <button key={id} onClick={() => { setPage(id); setShowMore(false) }} style={{
-                  display:'flex', alignItems:'center', gap:10,
-                  padding:'14px 14px', border:`1px solid ${page===id ? 'rgba(201,160,48,.3)' : 'rgba(255,255,255,.07)'}`,
-                  borderRadius:'var(--rs)',
-                  background: page===id ? 'rgba(201,160,48,.08)' : 'rgba(255,255,255,.02)',
-                  color: page===id ? 'var(--gold-400)' : 'var(--cream)',
-                  cursor:'pointer', fontSize:14, fontWeight:500,
-                }}>
-                  <span style={{ fontSize:20 }}>{icon}</span>
-                  {label}
-                </button>
-              ))}
+              {secondaryNav.map(nav => {
+                const active = isActive(nav)
+                return (
+                  <Link key={nav.id} to={nav.path} onClick={() => setShowMore(false)} style={{
+                    display:'flex', alignItems:'center', gap:10,
+                    padding:'14px 14px', border:`1px solid ${active ? 'rgba(201,160,48,.3)' : 'rgba(255,255,255,.07)'}`,
+                    borderRadius:'var(--rs)',
+                    background: active ? 'rgba(201,160,48,.08)' : 'rgba(255,255,255,.02)',
+                    color: active ? 'var(--gold-400)' : 'var(--cream)',
+                    cursor:'pointer', fontSize:14, fontWeight:500,
+                    textDecoration:'none',
+                  }}>
+                    <span style={{ fontSize:20 }}>{nav.icon}</span>
+                    {nav.label}
+                  </Link>
+                )
+              })}
             </div>
           </div>
         </>

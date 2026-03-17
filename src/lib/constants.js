@@ -9,16 +9,16 @@ export const PIPELINE_STAGES = ['backlog','in_progress','review','approved','don
 export const PIPELINE_LABELS = { backlog:'Backlog', in_progress:'In Progress', review:'Review', approved:'Approved', done:'Done' }
 
 export const NAV = [
-  { id:'brief',       icon:'⚓', label:'Daily Brief'    },
-  { id:'pipeline',    icon:'⬡', label:'Pipeline'       },
-  { id:'projects',    icon:'🚀', label:'Projects'       },
-  { id:'ideas',       icon:'💡', label:'Ideas'          },
-  { id:'notes',       icon:'📝', label:'Notes'          },
-  { id:'workouts',    icon:'💪', label:'Workouts'       },
-  { id:'performance', icon:'▲', label:'Performance'    },
-  { id:'review',      icon:'◻', label:'Daily Review'   },
-  { id:'health',      icon:'◎', label:'Process Health' },
-  { id:'habits',      icon:'✓', label:'Habits & Todos' },
+  { id:'brief',       path:'/',              icon:'⚓', label:'Daily Brief'    },
+  { id:'pipeline',    path:'/pipeline',      icon:'⬡', label:'Pipeline'       },
+  { id:'projects',    path:'/projects',      icon:'🚀', label:'Projects'       },
+  { id:'ideas',       path:'/ideas',         icon:'💡', label:'Ideas'          },
+  { id:'notes',       path:'/notes',         icon:'📝', label:'Notes'          },
+  { id:'workouts',    path:'/workouts',      icon:'💪', label:'Workouts'       },
+  { id:'performance', path:'/performance',   icon:'▲', label:'Performance'    },
+  { id:'review',      path:'/review',        icon:'◻', label:'Daily Review'   },
+  { id:'health',      path:'/health',        icon:'◎', label:'Process Health' },
+  { id:'habits',      path:'/habits-todos',  icon:'✓', label:'Habits & Todos' },
 ]
 
 export function getMonday(d = new Date()) {

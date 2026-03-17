@@ -1,5 +1,7 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
+import { NAV } from '../lib/constants'
 
 const PAGE_TITLES = {
   brief:       ['Daily Brief',     'CAPTAIN\'S LOG / TODAY'],
@@ -11,12 +13,18 @@ const PAGE_TITLES = {
   performance: ['Performance',     'CAPTAIN\'S LOG / ANALYTICS'],
   review:      ['Daily Review',    'CAPTAIN\'S LOG / REVIEW'],
   health:      ['Process Health',  'CAPTAIN\'S LOG / PROCESS'],
+  habits:      ['Habits & Todos',  'CAPTAIN\'S LOG / HABITS'],
 }
 
-export default function Topbar({ page, onToast }) {
+export default function Topbar({ onToast }) {
   const [syncing, setSyncing] = useState(false)
   const qc = useQueryClient()
-  const [title, crumb] = PAGE_TITLES[page] || ['Captain\'s Log', '']
+  const location = useLocation()
+
+  // Derive page id from current path
+  const nav = NAV.find(n => n.path === '/' ? location.pathname === '/' : location.pathname.startsWith(n.path))
+  const pageId = nav?.id || 'brief'
+  const [title, crumb] = PAGE_TITLES[pageId] || ['Captain\'s Log', '']
 
   async function sync() {
     setSyncing(true)

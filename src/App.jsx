@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Routes, Route } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
@@ -12,16 +13,15 @@ import Projects from './components/Projects'
 import Notes from './components/Notes'
 import Ideas from './components/Ideas'
 import Todos from './components/Todos'
-import BriefHeader from './components/BriefHeader'
 import QuickLogWorkout from './components/QuickLogWorkout'
 import CalendarSidebar from './components/CalendarSidebar'
 import IntelligenceBrief from './components/IntelligenceBrief'
 import MomentumScore from './components/MomentumScore'
 import ProofOfWork from './components/ProofOfWork'
 import HabitsTodos from './pages/HabitsTodos'
-import { GrowthChart, PillarChart, ExecChart } from './components/Charts'
+import { GrowthChart, ExecChart } from './components/Charts'
 import { api } from './lib/api'
-import { PILLARS, fmtDate } from './lib/constants'
+import { PILLARS } from './lib/constants'
 
 // ── Shared UI ─────────────────────────────────────────────
 function Toast({ msg, icon }) {
@@ -119,7 +119,6 @@ function Performance({ content=[], dash, reviews=[], growth=[] }) {
 
 // ── Process Health ────────────────────────────────────────
 function ProcessHealth({ execPct, published, dailyReviews=[] }) {
-  // Build execution chart from daily reviews grouped by week
   const weekMap = {}
   dailyReviews.forEach(r => {
     const d = new Date(r.review_date)
@@ -178,7 +177,6 @@ function ProcessHealth({ execPct, published, dailyReviews=[] }) {
 
 // ── Main App ──────────────────────────────────────────────
 export default function App() {
-  const [page, setPage] = useState('brief')
   const [toast, setToast] = useState(null)
 
   function showToast(msg, icon='✓') {
@@ -213,7 +211,6 @@ export default function App() {
   const habitsTotal = dueHabits.length
   const habitPct    = habitsTotal>0 ? Math.min(100,(habitsDone/habitsTotal)*100) : 0
 
-  // Streak — consecutive days all habits logged
   let streak = 0
   if (reviews) {
     const sorted = [...(reviews||[])].sort((a,b)=>new Date(b.week_start)-new Date(a.week_start))
@@ -225,85 +222,66 @@ export default function App() {
 
   const growthData = growth || (dash?.youtube ? [{ date:new Date().toISOString().split('T')[0], yt:ytSubs, ig:igFollow }] : [])
 
+  const briefPage = (
+    <div style={{ display:'flex', gap:18, alignItems:'flex-start' }}>
+      <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:16 }}>
+        <ProofOfWork
+          habits={habitList}
+          todos={todos||[]}
+          projects={projects||[]}
+          workouts={workouts||[]}
+          content={content||[]}
+        />
+        <MomentumScore
+          habitPct={habitPct}
+          projects={projects||[]}
+          workouts={workouts||[]}
+          content={content||[]}
+        />
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }} className="gauge-grid">
+          <Gauge pct={habitPct} label="Today's Habits" sub={habitsTotal>0?`${habitsDone} of ${habitsTotal} habits logged`:'Log habits via WhatsApp'} size="large"/>
+          <Gauge pct={contentExecPct} label="Content Execution" sub={`${totalPublished} of ${totalPlanned} planned`} size="large"/>
+        </div>
+        <DailyHabits habits={habitList} onToast={showToast}/>
+        <Todos todos={todos||[]} onToast={showToast}/>
+        <QuickLogWorkout onToast={showToast}/>
+        <QuickCapture onToast={showToast}/>
+        <IntelligenceBrief
+          dashboardData={dash}
+          habits={habitList}
+          projects={projects||[]}
+          reviews={dailyReviews||[]}
+        />
+      </div>
+      <div className="calendar-col">
+        <CalendarSidebar/>
+      </div>
+      <style>{`
+        .calendar-col { display: block; }
+        @media (max-width: 900px) { .calendar-col { display: none; } }
+        @media (max-width: 600px) { .gauge-grid { grid-template-columns: 1fr !important; } }
+      `}</style>
+    </div>
+  )
+
   return (
     <div className="app-layout">
-      <Sidebar page={page} setPage={setPage}/>
+      <Sidebar/>
       <main className="main-content">
-        <Topbar page={page} onToast={showToast}/>
+        <Topbar onToast={showToast}/>
         <div className="page-body">
-
-          {/* ══ DAILY BRIEF ══ */}
-          {page==='brief' && (
-            <div style={{ display:'flex', gap:18, alignItems:'flex-start' }}>
-              {/* Main column */}
-              <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:16 }}>
-                <ProofOfWork
-                  habits={habitList}
-                  todos={todos||[]}
-                  projects={projects||[]}
-                  workouts={workouts||[]}
-                  content={content||[]}
-                />
-                <MomentumScore
-                  habitPct={habitPct}
-                  projects={projects||[]}
-                  workouts={workouts||[]}
-                  content={content||[]}
-                />
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }} className="gauge-grid">
-                  <Gauge pct={habitPct} label="Today's Habits" sub={habitsTotal>0?`${habitsDone} of ${habitsTotal} habits logged`:'Log habits via WhatsApp'} size="large"/>
-                  <Gauge pct={contentExecPct} label="Content Execution" sub={`${totalPublished} of ${totalPlanned} planned`} size="large"/>
-                </div>
-                <DailyHabits habits={habitList} onToast={showToast}/>
-                <Todos todos={todos||[]} onToast={showToast}/>
-                <QuickLogWorkout onToast={showToast}/>
-                <QuickCapture onToast={showToast}/>
-                <IntelligenceBrief
-                  dashboardData={dash}
-                  habits={habitList}
-                  projects={projects||[]}
-                  reviews={dailyReviews||[]}
-                />
-              </div>
-              {/* Calendar sidebar */}
-              <div className="calendar-col">
-                <CalendarSidebar/>
-              </div>
-              <style>{`
-                .calendar-col { display: block; }
-                @media (max-width: 900px) { .calendar-col { display: none; } }
-                @media (max-width: 600px) { .gauge-grid { grid-template-columns: 1fr !important; } }
-              `}</style>
-            </div>
-          )}
-
-          {/* ══ PIPELINE ══ */}
-          {page==='pipeline' && <Pipeline pipeline={pipeline} onToast={showToast}/>}
-
-          {/* ══ PROJECTS ══ */}
-          {page==='projects' && <Projects onToast={showToast}/>}
-
-          {/* ══ IDEAS ══ */}
-          {page==='ideas' && <Ideas onToast={showToast}/>}
-
-          {/* ══ NOTES ══ */}
-          {page==='notes' && <Notes onToast={showToast}/>}
-
-          {/* ══ WORKOUTS ══ */}
-          {page==='workouts' && <Workouts/>}
-
-          {/* ══ PERFORMANCE ══ */}
-          {page==='performance' && <Performance content={content||[]} dash={dash} reviews={reviews||[]} growth={growthData}/>}
-
-          {/* ══ DAILY REVIEW ══ */}
-          {page==='review' && <DailyReview onToast={showToast}/>}
-
-          {/* ══ PROCESS HEALTH ══ */}
-          {page==='health' && <ProcessHealth execPct={contentExecPct} published={published} dailyReviews={dailyReviews||[]}/>}
-
-          {/* ══ HABITS & TODOS ══ */}
-          {page==='habits' && <HabitsTodos habits={habitList} todos={todos||[]} onToast={showToast}/>}
-
+          <Routes>
+            <Route path="/" element={briefPage}/>
+            <Route path="/pipeline" element={<Pipeline pipeline={pipeline} onToast={showToast}/>}/>
+            <Route path="/projects" element={<Projects onToast={showToast}/>}/>
+            <Route path="/ideas" element={<Ideas onToast={showToast}/>}/>
+            <Route path="/notes" element={<Notes onToast={showToast}/>}/>
+            <Route path="/workouts" element={<Workouts/>}/>
+            <Route path="/performance" element={<Performance content={content||[]} dash={dash} reviews={reviews||[]} growth={growthData}/>}/>
+            <Route path="/review" element={<DailyReview onToast={showToast}/>}/>
+            <Route path="/health" element={<ProcessHealth execPct={contentExecPct} published={published} dailyReviews={dailyReviews||[]}/>}/>
+            <Route path="/habits-todos" element={<HabitsTodos habits={habitList} todos={todos||[]} onToast={showToast}/>}/>
+          </Routes>
         </div>
       </main>
       {toast && <Toast {...toast}/>}
