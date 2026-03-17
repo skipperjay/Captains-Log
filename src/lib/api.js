@@ -1,8 +1,21 @@
 const BASE = import.meta.env.VITE_API_URL || '/api'
 
+function getToken() {
+  const urlParams = new URLSearchParams(window.location.search)
+  const urlToken = urlParams.get('user')
+  if (urlToken) {
+    localStorage.setItem('captain_token', urlToken)
+    window.history.replaceState({}, '', window.location.pathname)
+  }
+  return localStorage.getItem('captain_token') || 'jay-captain-2026'
+}
+
 async function req(path, opts = {}) {
   const res = await fetch(BASE + path, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-user-token': getToken(),
+    },
     ...opts,
   })
   if (!res.ok) throw new Error(`API ${res.status}: ${path}`)
